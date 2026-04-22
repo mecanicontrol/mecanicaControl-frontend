@@ -12,6 +12,7 @@ function App(){
       <Routes>
         <Route path="/" element={<Home/>} />
         <Route path="/cotizador" element={<Cotizador />} />
+        <Route path="/login" element={<Login/>} />
       </Routes>
     </BrowserRouter>
   )
