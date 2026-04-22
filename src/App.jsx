@@ -4,6 +4,7 @@
 import { BrowserRouter,Route,Routes } from "react-router-dom";
 import Home from './pages/Home'
 import Cotizador from './pages/Publico/Cotizador'
+import Login from "./pages/Publico/Login";
 
 
 function App(){
