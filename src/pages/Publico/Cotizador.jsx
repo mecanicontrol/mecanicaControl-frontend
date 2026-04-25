@@ -5,8 +5,7 @@ import ResumenCotizacion from '../../components/cotizador/ResumenCotizacion'
 import Navbar            from '../../components/Navbar'
 import Footer            from '../../components/Footer'
 import HeroCotizador     from '../../components/cotizador/HeroCotizador'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+import { diagnosticarVehiculo } from '../../services/diagnosticoService'
 
 export default function Cotizador() {
   const [modo, setModo]                               = useState('manual')
@@ -21,19 +20,13 @@ export default function Cotizador() {
     setCargando(true)
     setError(null)
     try {
-      const res = await fetch(`${API_URL}/api/ia/diagnosticar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          descripcionFallo,
-          marca:       vehiculo.marca,
-          modelo:      vehiculo.modelo,
-          anio:        Number(vehiculo.anio),
-          kilometraje: Number(vehiculo.kilometraje),
-        }),
+      const { data } = await diagnosticarVehiculo({
+        descripcionFallo,
+        marca:       vehiculo.marca,
+        modelo:      vehiculo.modelo,
+        anio:        Number(vehiculo.anio),
+        kilometraje: Number(vehiculo.kilometraje),
       })
-      if (!res.ok) throw new Error('Error al conectar con el servidor')
-      const data = await res.json()
       setResultado(data)
     } catch (e) {
       setError(e.message)

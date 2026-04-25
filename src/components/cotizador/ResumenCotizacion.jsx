@@ -1,8 +1,8 @@
 import { FileText, Calendar } from 'lucide-react'
 
 export default function ResumenCotizacion({ vehiculo, serviciosSeleccionados }) {
+  const idCotizacion = '#49202-MAN'
   const total = serviciosSeleccionados.reduce((sum, s) => sum + s.precio, 0)
-  const idCotizacion = `#${Math.floor(10000 + Math.random() * 90000)}-MAN`
 
   const vehiculoLabel = [vehiculo.marca, vehiculo.modelo, vehiculo.anio]
     .filter(Boolean)
