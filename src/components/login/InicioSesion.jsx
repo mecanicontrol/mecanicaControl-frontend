@@ -150,7 +150,7 @@ export default function InicioSesion({
           {/* BOTÓN */}
           <button 
             onClick={handleLogin}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold text-sm transition"
+            className="w-full bg-orange-500 ..."
           >
             INICIAR SESIÓN
           </button>
