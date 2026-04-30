@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import DiagnosticoIA     from '../../components/cotizador/DiagnosticoIA'
 import ResumenServicios  from '../../components/cotizador/ResumenServicios'
 import ResumenCotizacion from '../../components/cotizador/ResumenCotizacion'
@@ -6,6 +6,7 @@ import Navbar            from '../../components/Navbar'
 import Footer            from '../../components/Footer'
 import HeroCotizador     from '../../components/cotizador/HeroCotizador'
 import { diagnosticarVehiculo } from '../../services/diagnosticoService'
+import { obtenerServicios }     from '../../services/serviciosCatalogoService'
 
 export default function Cotizador() {
   const [modo, setModo]                               = useState('manual')
@@ -15,6 +16,11 @@ export default function Cotizador() {
   const [resultado, setResultado]                     = useState(null)
   const [cargando, setCargando]                       = useState(false)
   const [error, setError]                             = useState(null)
+  const [catalogoServicios, setCatalogoServicios]     = useState([])
+
+  useEffect(() => {
+    obtenerServicios().then(({ data }) => setCatalogoServicios(data)).catch(() => {})
+  }, [])
 
   const handleAnalizar = async () => {
     setCargando(true)
@@ -73,7 +79,17 @@ export default function Cotizador() {
             serviciosSeleccionados={
               modo === 'manual'
                 ? serviciosSeleccionados
-                : resultado?.serviciosRecomendados?.map((s, i) => ({ id: i, nombre: s.nombre, precio: s.precioBase })) ?? []
+                : resultado?.serviciosRecomendados?.map(s => {
+                    const match = catalogoServicios.find(c =>
+                      c.nombre?.toLowerCase().includes(s.nombre?.toLowerCase()) ||
+                      s.nombre?.toLowerCase().includes(c.nombre?.toLowerCase())
+                    )
+                    return {
+                      id:        match?.id ?? catalogoServicios[0]?.id ?? null,
+                      nombre:    s.nombre,
+                      precioBase: s.precioBase,
+                    }
+                  }) ?? []
             }
           />
         </div>

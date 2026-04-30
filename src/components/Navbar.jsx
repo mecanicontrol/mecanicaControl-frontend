@@ -1,17 +1,36 @@
 import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
-const links = [
-  { to: '/',          label: 'Inicio'     },
-  { to: '/servicios', label: 'Servicios'  },
-  { to: '/cotizador', label: 'Cotizador'  },
-  { to: '/agendar',   label: 'Citas'      },
-  { to: '/contacto',  label: 'Contacto'   },
+const LINKS_PUBLICO = [
+  { to: '/',          label: 'Inicio'    },
+  { to: '/servicios', label: 'Servicios' },
+  { to: '/cotizador', label: 'Cotizador' },
+  { to: '/blog',      label: 'Blog'      },
+  { to: '/contacto',  label: 'Contacto'  },
+]
+
+const LINKS_CLIENTE = [
+  { to: '/',          label: 'Inicio'    },
+  { to: '/servicios', label: 'Servicios' },
+  { to: '/cotizador', label: 'Cotizador' },
+  { to: '/blog',      label: 'Blog'      },
+  { to: '/mis-citas', label: 'Mis Citas' },
+  { to: '/contacto',  label: 'Contacto'  },
 ]
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const location = useLocation()
+  const location   = useLocation()
+  const navigate   = useNavigate()
+  const { usuario, logout } = useAuth()
+
+  const links = usuario ? LINKS_CLIENTE : LINKS_PUBLICO
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
 
   return (
     <nav className="bg-gray-900 border-b border-gray-800 text-white">
@@ -47,20 +66,28 @@ export default function Navbar() {
           ))}
         </div>
 
-        {/* Botones */}
+        {/* Botones derecha */}
         <div className="hidden md:flex items-center gap-2">
-          <Link
-            to="/login"
-            className="px-4 py-2 text-sm font-semibold text-gray-300 border border-gray-700 rounded hover:border-gray-500 hover:text-white transition-colors"
-          >
-            Acceso
-          </Link>
-          <Link
-            to="/agendar"
-            className="px-4 py-2 text-sm font-semibold text-white bg-orange-500 rounded hover:bg-orange-600 transition-colors"
-          >
-            Agendar cita
-          </Link>
+          {usuario ? (
+            <>
+              <span className="text-sm text-gray-400">
+                Hola, <span className="text-white font-semibold">{usuario.nombre ?? usuario.email}</span>
+              </span>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm font-semibold text-gray-300 border border-gray-700 rounded hover:border-gray-500 hover:text-white transition-colors"
+              >
+                Cerrar sesión
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              className="px-4 py-2 text-sm font-semibold text-gray-300 border border-gray-700 rounded hover:border-gray-500 hover:text-white transition-colors"
+            >
+              Acceso
+            </Link>
+          )}
         </div>
 
         {/* Hamburger */}
@@ -91,13 +118,23 @@ export default function Navbar() {
               {label}
             </Link>
           ))}
-          <div className="flex gap-2 mt-3 pt-3 border-t border-gray-800">
-            <Link to="/login" className="flex-1 text-center py-2 text-sm border border-gray-700 text-gray-300 rounded hover:border-gray-500">
-              Acceso
-            </Link>
-            <Link to="/agendar" className="flex-1 text-center py-2 text-sm bg-orange-500 text-white rounded font-semibold hover:bg-orange-600">
-              Agendar
-            </Link>
+          <div className="mt-3 pt-3 border-t border-gray-800">
+            {usuario ? (
+              <button
+                onClick={() => { handleLogout(); setMenuOpen(false) }}
+                className="w-full py-2 text-sm border border-gray-700 text-gray-300 rounded hover:border-gray-500 text-center"
+              >
+                Cerrar sesión
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMenuOpen(false)}
+                className="block text-center py-2 text-sm border border-gray-700 text-gray-300 rounded hover:border-gray-500"
+              >
+                Acceso
+              </Link>
+            )}
           </div>
         </div>
       )}

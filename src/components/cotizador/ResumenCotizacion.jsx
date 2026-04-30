@@ -1,8 +1,10 @@
+import { useNavigate } from 'react-router-dom'
 import { FileText, Calendar } from 'lucide-react'
 
 export default function ResumenCotizacion({ vehiculo, serviciosSeleccionados }) {
+  const navigate = useNavigate()
   const idCotizacion = '#49202-MAN'
-  const total = serviciosSeleccionados.reduce((sum, s) => sum + s.precio, 0)
+  const total = serviciosSeleccionados.reduce((sum, s) => sum + (s.precioBase ?? s.precio ?? 0), 0)
 
   const vehiculoLabel = [vehiculo.marca, vehiculo.modelo, vehiculo.anio]
     .filter(Boolean)
@@ -35,7 +37,7 @@ export default function ResumenCotizacion({ vehiculo, serviciosSeleccionados }) 
             <div key={s.id} className="flex justify-between items-center">
               <span className="text-gray-400 text-sm">{s.nombre}</span>
               <span className="text-white text-sm font-semibold">
-                ${s.precio.toLocaleString('es-CL')}
+                ${(s.precioBase ?? s.precio ?? 0).toLocaleString('es-CL')}
               </span>
             </div>
           ))}
@@ -63,6 +65,7 @@ export default function ResumenCotizacion({ vehiculo, serviciosSeleccionados }) 
       {/* Botón */}
       <button
         disabled={serviciosSeleccionados.length === 0}
+        onClick={() => navigate('/agendar', { state: { vehiculo, servicios: serviciosSeleccionados } })}
         className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-white font-black py-3 rounded-lg uppercase text-sm tracking-wider transition-colors"
       >
         {serviciosSeleccionados.length === 0

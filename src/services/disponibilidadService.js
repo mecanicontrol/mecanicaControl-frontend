@@ -1,4 +1,4 @@
 import api from '../api/axiosInstance'
 
-export const obtenerDisponibilidad = (fecha) =>
-  api.get('/api/disponibilidad', { params: { fecha } })
+export const obtenerDisponibilidad = (fecha, servicioId) =>
+  api.get('/api/disponibilidad', { params: { fecha, servicioId } })
