@@ -41,11 +41,7 @@ export default function SelectorHorario({ fecha, servicioId, horaSeleccionada, o
       </h3>
 
       {cargando ? (
-        <div className="grid grid-cols-2 gap-2">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
-          ))}
-        </div>
+        <CargandoAuto mensaje="Buscando horarios disponibles..." />
       ) : slots.length === 0 ? (
         <p className="text-gray-400 text-sm text-center py-6">No hay horarios disponibles para este día</p>
       ) : (

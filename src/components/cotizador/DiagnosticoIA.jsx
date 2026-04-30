@@ -1,4 +1,5 @@
 import { Bot, Car } from 'lucide-react'
+import CargandoAuto from '../shared/CargandoAuto'
 
 const URGENCIA_COLOR = {
   URGENTE: 'text-red-500',
@@ -61,6 +62,12 @@ export default function DiagnosticoIA({ vehiculo, setVehiculo, descripcionFallo,
           <Bot size={18} />
           {cargando ? 'Analizando...' : 'Analizar con IA'}
         </button>
+
+        {cargando && (
+          <div className="mt-4">
+            <CargandoAuto mensaje="La IA está analizando tu vehículo..." />
+          </div>
+        )}
 
         {error && (
           <p className="text-red-400 text-sm mt-3">{error}</p>
