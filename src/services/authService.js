@@ -1,7 +1,11 @@
-import api from '../api/axiosInstance'
+import axios from "axios";
 
-export const login = (credenciales) =>
-  api.post('/api/auth/login', credenciales)
+const API = "http://localhost:8080/api/auth";
 
-export const register = (datos) =>
-  api.post('/api/auth/register', datos)
+export const login = (credenciales) => {
+  return axios.post(`${API}/login`, credenciales);
+};
+
+export const register = (datos) => {
+  return axios.post(`${API}/register`, datos);
+};
