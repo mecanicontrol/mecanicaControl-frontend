@@ -9,6 +9,7 @@ export default function InicioSesion({
   setPassword,
   handleLogin
 }) {
+
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -150,7 +151,7 @@ export default function InicioSesion({
           {/* BOTÓN */}
           <button 
             onClick={handleLogin}
-            className="w-full bg-orange-500 ..."
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold"
           >
             INICIAR SESIÓN
           </button>
