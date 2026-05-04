@@ -7,7 +7,9 @@ export default function InicioSesion({
   password,
   setEmail,
   setPassword,
-  handleLogin
+  handleLogin,
+  error,
+  cargando,
 }) {
 
   const [showPassword, setShowPassword] = useState(false);
@@ -148,12 +150,20 @@ export default function InicioSesion({
             </Link>
           </div>
 
+          {/* ERROR */}
+          {error && (
+            <p className="text-red-500 text-sm text-center mb-4 bg-red-50 border border-red-200 rounded-lg py-2 px-3">
+              {error}
+            </p>
+          )}
+
           {/* BOTÓN */}
-          <button 
+          <button
             onClick={handleLogin}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold"
+            disabled={cargando}
+            className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold transition-colors"
           >
-            INICIAR SESIÓN
+            {cargando ? 'Ingresando...' : 'INICIAR SESIÓN'}
           </button>
 
         </div>

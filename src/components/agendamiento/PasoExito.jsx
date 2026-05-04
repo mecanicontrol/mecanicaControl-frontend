@@ -1,3 +1,5 @@
 export default function PasoExito() {
-  return <div></div>
+  return <div>
+    
+  </div>
 }

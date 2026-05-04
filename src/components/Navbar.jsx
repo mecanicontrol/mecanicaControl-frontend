@@ -11,12 +11,17 @@ const LINKS_PUBLICO = [
 ]
 
 const LINKS_CLIENTE = [
-  { to: '/',          label: 'Inicio'    },
-  { to: '/servicios', label: 'Servicios' },
-  { to: '/cotizador', label: 'Cotizador' },
-  { to: '/blog',      label: 'Blog'      },
-  { to: '/mis-citas', label: 'Mis Citas' },
-  { to: '/contacto',  label: 'Contacto'  },
+  { to: '/',               label: 'Inicio'        },
+  { to: '/servicios',      label: 'Servicios'     },
+  { to: '/cotizador',      label: 'Cotizador'     },
+  { to: '/blog',           label: 'Blog'          },
+  { to: '/mis-vehiculos',  label: 'Mis Vehículos' },
+  { to: '/contacto',       label: 'Contacto'      },
+]
+
+const LINKS_ADMIN = [
+  { to: '/admin',          label: 'Panel Admin'   },
+  { to: '/cotizador',      label: 'Cotizador'     },
 ]
 
 export default function Navbar() {
@@ -25,7 +30,7 @@ export default function Navbar() {
   const navigate   = useNavigate()
   const { usuario, logout } = useAuth()
 
-  const links = usuario ? LINKS_CLIENTE : LINKS_PUBLICO
+  const links = usuario?.rol === 'ADMIN' ? LINKS_ADMIN : usuario ? LINKS_CLIENTE : LINKS_PUBLICO
 
   const handleLogout = () => {
     logout()

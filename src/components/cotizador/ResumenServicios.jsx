@@ -1,12 +1,25 @@
 import { useState, useEffect } from 'react'
 import { Car } from 'lucide-react'
-import { obtenerServicios } from '../../services/serviciosCatalogoService'
-import CargandoAuto from '../shared/CargandoAuto'
+import { obtenerServicios }              from '../../services/serviciosCatalogoService'
+import { obtenerMarcas, obtenerModelos } from '../../services/marcasService'
+import CargandoAuto                      from '../shared/CargandoAuto'
+import SelectorVehiculoPerfil            from '../shared/SelectorVehiculoPerfil'
 
 export default function ResumenServicios({ vehiculo, setVehiculo, serviciosSeleccionados, setServiciosSeleccionados }) {
-  const [servicios, setServicios]   = useState([])
-  const [cargando, setCargando]     = useState(true)
-  const [error, setError]           = useState(false)
+  const [servicios, setServicios] = useState([])
+  const [cargando, setCargando]   = useState(true)
+  const [error, setError]         = useState(false)
+  const [marcas, setMarcas]       = useState([])
+  const [modelos, setModelos]     = useState([])
+
+  useEffect(() => {
+    obtenerMarcas().then(({ data }) => setMarcas(data)).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!vehiculo.marcaId) { setModelos([]); return }
+    obtenerModelos(vehiculo.marcaId).then(({ data }) => setModelos(data)).catch(() => setModelos([]))
+  }, [vehiculo.marcaId])
 
   useEffect(() => {
     obtenerServicios()
@@ -14,6 +27,18 @@ export default function ResumenServicios({ vehiculo, setVehiculo, serviciosSelec
       .catch(() => setError(true))
       .finally(() => setCargando(false))
   }, [])
+
+  const handleMarca = (e) => {
+    const marcaId     = e.target.value
+    const marcaNombre = marcas.find(m => m.id === marcaId)?.nombre ?? ''
+    setVehiculo({ ...vehiculo, marcaId, marca: marcaNombre, modeloId: '', modelo: '' })
+  }
+
+  const handleModelo = (e) => {
+    const modeloId    = e.target.value
+    const modeloNombre = modelos.find(m => m.id === modeloId)?.nombre ?? ''
+    setVehiculo({ ...vehiculo, modeloId, modelo: modeloNombre })
+  }
 
   const handleChange = (e) => setVehiculo({ ...vehiculo, [e.target.name]: e.target.value })
 
@@ -26,6 +51,9 @@ export default function ResumenServicios({ vehiculo, setVehiculo, serviciosSelec
     }
   }
 
+  const inputClass = 'w-full bg-gray-50 border border-gray-300 text-gray-800 px-3 py-2 rounded text-sm focus:outline-none focus:border-orange-500'
+  const labelClass = 'block text-xs text-gray-500 font-bold uppercase mb-1'
+
   return (
     <div className="space-y-4">
 
@@ -35,25 +63,52 @@ export default function ResumenServicios({ vehiculo, setVehiculo, serviciosSelec
           <Car size={18} className="text-orange-500" />
           IDENTIFICACIÓN DEL VEHÍCULO
         </h2>
+
+        {/* Selector de vehículos del perfil */}
+        <SelectorVehiculoPerfil vehiculo={vehiculo} setVehiculo={setVehiculo} />
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { name: 'marca',       label: 'MARCA',       placeholder: 'Toyota'   },
-            { name: 'modelo',      label: 'MODELO',      placeholder: 'Corolla'  },
-            { name: 'anio',        label: 'AÑO',         placeholder: '2024'     },
-            { name: 'kilometraje', label: 'KILOMETRAJE', placeholder: '5.000 KM' },
-          ].map(({ name, label, placeholder }) => (
-            <div key={name}>
-              <label className="block text-xs text-gray-500 font-bold uppercase mb-1">{label}</label>
-              <input
-                name={name}
-                value={vehiculo[name]}
-                onChange={handleChange}
-                placeholder={placeholder}
-                className="w-full bg-gray-50 border border-gray-300 text-gray-800 px-3 py-2 rounded text-sm focus:outline-none focus:border-orange-500"
-              />
-            </div>
-          ))}
+
+          <div>
+            <label className={labelClass}>MARCA</label>
+            <select value={vehiculo.marcaId ?? ''} onChange={handleMarca} className={inputClass}>
+              <option value="">Selecciona</option>
+              {marcas.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className={labelClass}>MODELO</label>
+            <select value={vehiculo.modeloId ?? ''} onChange={handleModelo}
+              disabled={!vehiculo.marcaId} className={`${inputClass} disabled:opacity-50 disabled:cursor-not-allowed`}>
+              <option value="">Selecciona</option>
+              {modelos.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className={labelClass}>AÑO</label>
+            <input type="number" name="anio" value={vehiculo.anio ?? ''}
+              onChange={(e) => { if (e.target.value.length <= 4) handleChange(e) }}
+              placeholder="2024" min="1900" max="2100" className={inputClass} />
+          </div>
+
+          <div>
+            <label className={labelClass}>KILOMETRAJE</label>
+            <input type="number" name="kilometraje" value={vehiculo.kilometraje ?? ''}
+              onChange={(e) => { if (e.target.value.length <= 6) handleChange(e) }}
+              placeholder="50000" min="0" className={inputClass} />
+          </div>
+
         </div>
+
+        <div className="mt-4 max-w-xs">
+          <label className={labelClass}>PATENTE</label>
+          <input type="text" name="patente" value={vehiculo.patente ?? ''}
+            onChange={(e) => handleChange({ target: { name: 'patente', value: e.target.value.toUpperCase() } })}
+            placeholder="Ej: ABCD12" maxLength={8} className={inputClass} />
+        </div>
+
       </div>
 
       {/* Servicios disponibles */}
@@ -72,15 +127,10 @@ export default function ResumenServicios({ vehiculo, setVehiculo, serviciosSelec
             {servicios.map((servicio) => {
               const seleccionado = serviciosSeleccionados.find(s => s.id === servicio.id)
               return (
-                <button
-                  key={servicio.id}
-                  onClick={() => toggleServicio(servicio)}
+                <button key={servicio.id} onClick={() => toggleServicio(servicio)}
                   className={`text-left p-4 rounded-lg border-2 transition-all ${
-                    seleccionado
-                      ? 'border-orange-500 bg-orange-500/10'
-                      : 'border-gray-200 bg-gray-50 hover:border-gray-400'
-                  }`}
-                >
+                    seleccionado ? 'border-orange-500 bg-orange-500/10' : 'border-gray-200 bg-gray-50 hover:border-gray-400'
+                  }`}>
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="font-bold text-sm text-gray-800">{servicio.nombre}</p>

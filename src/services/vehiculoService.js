@@ -1,7 +1,7 @@
 import api from '../api/axiosInstance'
 
-export const obtenerVehiculos = () =>
-  api.get('/api/vehiculos')
+export const obtenerMisVehiculos = () =>
+  api.get('/api/vehiculos/mis-vehiculos')
 
-export const crearVehiculo = (datos) =>
+export const guardarVehiculo = (datos) =>
   api.post('/api/vehiculos', datos)
