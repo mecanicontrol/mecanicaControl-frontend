@@ -7,7 +7,12 @@ export default function InicioSesion({
   password,
   setEmail,
   setPassword,
-  handleLogin
+  handleLogin,
+  nombre,
+  apellido,
+  setNombre,
+  setApellido,
+  esRegistro
 }) {
 
   const [showPassword, setShowPassword] = useState(false);
@@ -81,11 +86,13 @@ export default function InicioSesion({
         <div className="w-full max-w-lg bg-white p-10 rounded-2xl shadow-xl">
 
           <h1 className="text-3xl font-bold text-center mb-2">
-            BIENVENIDO DE VUELTA
+            {esRegistro ? "CREAR CUENTA" : "BIENVENIDO DE VUELTA"}
           </h1>
 
           <p className="text-center text-gray-500 text-sm mb-6">
-            Ingresa tus credenciales para continuar
+            {esRegistro 
+              ? "Completa los datos para registrarte"
+              : "Ingresa tus credenciales para continuar"}
           </p>
 
           {/* EMAIL */}
@@ -136,24 +143,61 @@ export default function InicioSesion({
             </div>
           </div>
 
-          {/* OPCIONES */}
-          <div className="flex justify-between items-center text-xs mb-5 text-gray-500">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" />
-              Mantener sesión
-            </label>
+          {/* LINK LOGIN */}
+          {!esRegistro && (
+            <p className="text-center text-sm text-gray-500 mt-2 mb-4">
+              ¿Eres nuevo?{" "}
+              <Link 
+                to="/register"
+                className="text-orange-500 font-semibold hover:underline"
+              >
+                Crear cuenta
+              </Link>
+            </p>
+          )}
 
-            <Link className="text-blue-600 font-semibold">
-              ¿Olvidaste?
-            </Link>
-          </div>
+          {/* LINK VOLVER LOGIN */}
+          {esRegistro && (
+            <p className="text-center text-sm text-gray-500 mt-2 mb-4">
+              ¿Ya tienes cuenta?{" "}
+              <Link 
+                to="/login"
+                className="text-orange-500 font-semibold hover:underline"
+              >
+                Inicia sesión
+              </Link>
+            </p>
+          )}
+
+          {/* REGISTRO */}
+          {esRegistro && (
+            <>
+              <div className="mb-4">
+                <input
+                  placeholder="Nombre"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  className="bg-gray-100 px-4 py-3 rounded-lg w-full"
+                />
+              </div>
+
+              <div className="mb-4">
+                <input
+                  placeholder="Apellido"
+                  value={apellido}
+                  onChange={(e) => setApellido(e.target.value)}
+                  className="bg-gray-100 px-4 py-3 rounded-lg w-full"
+                />
+              </div>
+            </>
+          )}
 
           {/* BOTÓN */}
           <button 
             onClick={handleLogin}
             className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold"
           >
-            INICIAR SESIÓN
+            {esRegistro ? "REGISTRARSE" : "INICIAR SESIÓN"}
           </button>
 
         </div>

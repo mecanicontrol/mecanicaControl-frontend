@@ -51,6 +51,14 @@ export default function Login() {
           setPassword={setPassword} 
           handleLogin={handleLogin}
         />
+
+        {/* 👇 SOLO AGREGUÉ ESTO */}
+        <div style={{ textAlign: "center", marginTop: "10px" }}>
+          <button onClick={() => navigate("/register")}>
+            Crear cuenta
+          </button>
+        </div>
+
       </div>
 
       <Footer />

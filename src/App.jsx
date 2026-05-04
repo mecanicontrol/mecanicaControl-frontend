@@ -7,7 +7,7 @@ import Home         from './pages/Home'
 import Cotizador    from './pages/Publico/Cotizador'
 import Login        from './pages/Publico/Login'
 import Agendamiento from './pages/Publico/Agendamiento'
-
+import Register from "./pages/Publico/Register";
 function App() {
   return (
     <AuthProvider>
@@ -17,6 +17,7 @@ function App() {
           <Route path="/cotizador" element={<Cotizador />}   />
           <Route path="/login"    element={<Login />}        />
           <Route path="/agendar"  element={<Agendamiento />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
