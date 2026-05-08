@@ -67,12 +67,13 @@ export default function Navbar() {
         </div>
 
         {/* Botones derecha */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-3">
           {usuario ? (
             <>
               <span className="text-sm text-gray-400">
                 Hola, <span className="text-white font-semibold">{usuario.nombre ?? usuario.email}</span>
               </span>
+
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 text-sm font-semibold text-gray-300 border border-gray-700 rounded hover:border-gray-500 hover:text-white transition-colors"
@@ -81,12 +82,21 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <Link
-              to="/login"
-              className="px-4 py-2 text-sm font-semibold text-gray-300 border border-gray-700 rounded hover:border-gray-500 hover:text-white transition-colors"
-            >
-              Acceso
-            </Link>
+            <>
+              <Link
+                to="/login"
+                className="px-5 py-2 text-sm font-semibold border border-orange-500 text-orange-500 rounded-lg hover:bg-orange-500 hover:text-white transition"
+              >
+                Acceso
+              </Link>
+
+              <Link
+                to="/register"
+                className="px-5 py-2 text-sm font-semibold bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+              >
+                Registro
+              </Link>
+            </>
           )}
         </div>
 
@@ -118,6 +128,7 @@ export default function Navbar() {
               {label}
             </Link>
           ))}
+
           <div className="mt-3 pt-3 border-t border-gray-800">
             {usuario ? (
               <button
@@ -127,13 +138,25 @@ export default function Navbar() {
                 Cerrar sesión
               </button>
             ) : (
-              <Link
-                to="/login"
-                onClick={() => setMenuOpen(false)}
-                className="block text-center py-2 text-sm border border-gray-700 text-gray-300 rounded hover:border-gray-500"
-              >
-                Acceso
-              </Link>
+              <div className="flex flex-col gap-2">
+
+                <Link
+                  to="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="block text-center py-2 text-sm border border-orange-500 text-orange-500 rounded-lg hover:bg-orange-500 hover:text-white transition"
+                >
+                  Acceso
+                </Link>
+
+                <Link
+                  to="/register"
+                  onClick={() => setMenuOpen(false)}
+                  className="block text-center py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                >
+                  Registro
+                </Link>
+
+              </div>
             )}
           </div>
         </div>

@@ -2,6 +2,7 @@
 //Configuracion de Rutas
 
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Servicios from './pages/Publico/Servicios';
 import { AuthProvider } from './context/AuthContext'
 import Home         from './pages/Home'
 import Cotizador    from './pages/Publico/Cotizador'
@@ -18,6 +19,7 @@ function App() {
           <Route path="/login"    element={<Login />}        />
           <Route path="/agendar"  element={<Agendamiento />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/servicios" element={<Servicios />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
