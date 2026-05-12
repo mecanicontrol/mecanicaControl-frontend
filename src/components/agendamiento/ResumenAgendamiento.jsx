@@ -3,12 +3,20 @@ import { Car, Wrench, Calendar, MapPin } from 'lucide-react'
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const DIAS_SEMANA = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']
 
+function formatHora(iso) {
+  if (!iso) return null
+  const d = new Date(iso.includes('Z') || iso.includes('+') ? iso : iso + 'Z')
+  if (isNaN(d.getTime())) return iso
+  return d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' })
+}
+
 export default function ResumenAgendamiento({ vehiculo, servicios, fecha, hora }) {
   const total = servicios?.reduce((sum, s) => sum + (s.precio || s.precioBase || 0), 0) ?? 0
 
   const fechaTexto = fecha
     ? `${DIAS_SEMANA[new Date(fecha).getDay()]} ${new Date(fecha).getDate()} ${MESES[new Date(fecha).getMonth()]}, ${new Date(fecha).getFullYear()}`
     : null
+  const horaTexto = formatHora(hora)
 
   return (
     <div className="bg-gray-900 rounded-xl p-6 border border-gray-800 sticky top-4 space-y-5">
@@ -59,7 +67,7 @@ export default function ResumenAgendamiento({ vehiculo, servicios, fecha, hora }
             <Calendar size={12} /> Cita Programada
           </p>
           {fechaTexto && <p className="text-white font-black uppercase">{fechaTexto}</p>}
-          {hora && <p className="text-orange-400 font-black text-lg">{hora}</p>}
+          {horaTexto && <p className="text-orange-400 font-black text-lg">{horaTexto}</p>}
         </div>
       )}
 

@@ -14,7 +14,8 @@ export default function SelectorHorario({ fecha, servicioId, horaSeleccionada, o
         const fechaStr = new Date(fecha).toISOString().split('T')[0]
         const { data } = await obtenerDisponibilidad(fechaStr, servicioId)
         setSlots(data.map(s => ({
-          hora:    new Date(s.fechaHoraInicio).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }),
+          iso:     s.fechaHoraInicio,
+          display: new Date(s.fechaHoraInicio + 'Z').toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' }),
           ocupado: !s.disponible,
         })))
       } catch {
@@ -46,20 +47,20 @@ export default function SelectorHorario({ fecha, servicioId, horaSeleccionada, o
         <p className="text-gray-400 text-sm text-center py-6">No hay horarios disponibles para este día</p>
       ) : (
         <div className="grid grid-cols-2 gap-2">
-          {slots.map(({ hora, ocupado }) => (
+          {slots.map(({ iso, display, ocupado }) => (
             <button
-              key={hora}
+              key={iso}
               disabled={ocupado}
-              onClick={() => onSeleccionar(hora)}
+              onClick={() => onSeleccionar(iso)}
               className={`py-3 rounded-lg text-sm font-semibold transition-colors
                 ${ocupado
                   ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                  : horaSeleccionada === hora
+                  : horaSeleccionada === iso
                     ? 'bg-orange-500 text-white'
                     : 'bg-gray-50 border border-gray-200 text-gray-700 hover:border-orange-300 hover:text-orange-500'
                 }`}
             >
-              {hora}
+              {display}
             </button>
           ))}
         </div>

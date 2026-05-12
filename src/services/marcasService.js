@@ -4,4 +4,4 @@ export const obtenerMarcas = () =>
   api.get('/api/marcas')
 
 export const obtenerModelos = (marcaId) =>
-  api.get(`/api/marcas/${marcaId}/modelos`)
+  api.get(`/api/modelos/marca/${marcaId}`)

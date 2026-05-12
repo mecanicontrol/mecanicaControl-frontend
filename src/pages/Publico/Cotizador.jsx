@@ -10,7 +10,7 @@ import { obtenerServicios }     from '../../services/serviciosCatalogoService'
 
 export default function Cotizador() {
   const [modo, setModo]                               = useState('manual')
-  const [vehiculo, setVehiculo]                       = useState({ marca: '', modelo: '', anio: '', kilometraje: '' })
+  const [vehiculo, setVehiculo]                       = useState({ marcaId: '', marca: '', modeloId: '', modelo: '', anio: '', kilometraje: '', patente: '' })
   const [serviciosSeleccionados, setServiciosSeleccionados] = useState([])
   const [descripcionFallo, setDescripcionFallo]       = useState('')
   const [resultado, setResultado]                     = useState(null)
