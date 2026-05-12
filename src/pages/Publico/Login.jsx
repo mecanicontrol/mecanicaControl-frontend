@@ -1,58 +1,60 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Navbar from '../../components/Navbar'
-import Footer from '../../components/Footer'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import Navbar       from '../../components/Navbar'
+import Footer       from '../../components/Footer'
 import InicioSesion from '../../components/login/InicioSesion'
-import { login } from '../../services/authService'
+import { login }    from '../../services/authService'
+import { useAuth }  from '../../context/AuthContext'
 
 export default function Login() {
+  const navigate         = useNavigate()
+  const { login: loginCtx } = useAuth()
 
-  const navigate = useNavigate()
-
-  const [email, setEmail] = useState('')
+  const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
-  const [resultado, setResultado] = useState(null)
+  const [error, setError]       = useState(null)
+  const [cargando, setCargando] = useState(false)
 
   const handleLogin = async (e) => {
-    e.preventDefault()
-    console.log("CLICK LOGIN")
+    e?.preventDefault()
+    setError(null)
+    setCargando(true)
 
     try {
-      const { data } = await login({
-        email,
-        password,
+      const { data } = await login({ email, password })
+
+      loginCtx(data.token, {
+        token: data.token,
+        rol: data.rol,
+        nombre: data.nombre,
+        email: data.email ?? email,
+        usuarioId: data.usuarioId,
       })
 
-      localStorage.setItem("token", data.token)
-      localStorage.setItem("rol", data.rol)
-      localStorage.setItem("nombre", data.nombre)
-
-      setResultado(data)
-
-      alert("Login exitoso ")
-
-      navigate("/dashboard")
-
-    } catch (error) {
-      console.log(error)
-      alert("Error en login ")
+      if (data.rol === 'ADMIN' || data.rol === 'TECNICO') {
+        navigate('/admin')
+      } else {
+        navigate('/')
+      }
+    } catch {
+      setError('Credenciales incorrectas. Verifica tu email y contraseña.')
+    } finally {
+      setCargando(false)
     }
   }
 
   return (
     <div>
       <Navbar />
-      
-      <div>
-        <InicioSesion 
-          email={email} 
-          password={password}
-          setEmail={setEmail}
-          setPassword={setPassword} 
-          handleLogin={handleLogin}
-        />
-      </div>
-
+      <InicioSesion
+        email={email}
+        password={password}
+        setEmail={setEmail}
+        setPassword={setPassword}
+        handleLogin={handleLogin}
+        error={error}
+        cargando={cargando}
+      />
       <Footer />
     </div>
   )
