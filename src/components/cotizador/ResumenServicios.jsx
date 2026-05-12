@@ -23,7 +23,16 @@ export default function ResumenServicios({ vehiculo, setVehiculo, serviciosSelec
 
   useEffect(() => {
     obtenerServicios()
-      .then(({ data }) => { setServicios(data); setError(false) })
+      .then(({ data }) => {
+        const lista = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.servicios)
+          ? data.servicios
+          : []
+
+        setServicios(lista)
+        setError(false)
+      })
       .catch(() => setError(true))
       .finally(() => setCargando(false))
   }, [])
@@ -43,11 +52,19 @@ export default function ResumenServicios({ vehiculo, setVehiculo, serviciosSelec
   const handleChange = (e) => setVehiculo({ ...vehiculo, [e.target.name]: e.target.value })
 
   const toggleServicio = (servicio) => {
-    const yaSeleccionado = serviciosSeleccionados.find(s => s.id === servicio.id)
+    const yaSeleccionado = serviciosSeleccionados.find(
+      s => s.id === servicio.id
+    )
+
     if (yaSeleccionado) {
-      setServiciosSeleccionados(serviciosSeleccionados.filter(s => s.id !== servicio.id))
+      setServiciosSeleccionados(
+        serviciosSeleccionados.filter(s => s.id !== servicio.id)
+      )
     } else {
-      setServiciosSeleccionados([...serviciosSeleccionados, servicio])
+      setServiciosSeleccionados([
+        ...serviciosSeleccionados,
+        servicio
+      ])
     }
   }
 
@@ -57,7 +74,6 @@ export default function ResumenServicios({ vehiculo, setVehiculo, serviciosSelec
   return (
     <div className="space-y-4">
 
-      {/* Identificación del vehículo */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
         <h2 className="text-gray-800 font-bold text-lg flex items-center gap-2 mb-4">
           <Car size={18} className="text-orange-500" />
@@ -111,7 +127,6 @@ export default function ResumenServicios({ vehiculo, setVehiculo, serviciosSelec
 
       </div>
 
-      {/* Servicios disponibles */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
         <h2 className="text-gray-800 font-bold text-lg flex items-center gap-2 mb-4">
           <span className="text-orange-500">≡</span>
@@ -121,11 +136,16 @@ export default function ResumenServicios({ vehiculo, setVehiculo, serviciosSelec
         {cargando ? (
           <CargandoAuto mensaje="Cargando servicios disponibles..." />
         ) : error ? (
-          <p className="text-red-400 text-sm text-center py-6">No se pudieron cargar los servicios. Intenta recargar la página.</p>
+          <p className="text-red-400 text-sm text-center py-6">
+            No se pudieron cargar los servicios. Intenta recargar la página.
+          </p>
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {servicios.map((servicio) => {
-              const seleccionado = serviciosSeleccionados.find(s => s.id === servicio.id)
+              const seleccionado = serviciosSeleccionados.find(
+                s => s.id === servicio.id
+              )
+
               return (
                 <button key={servicio.id} onClick={() => toggleServicio(servicio)}
                   className={`text-left p-4 rounded-lg border-2 transition-all ${
@@ -133,16 +153,31 @@ export default function ResumenServicios({ vehiculo, setVehiculo, serviciosSelec
                   }`}>
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-bold text-sm text-gray-800">{servicio.nombre}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{servicio.descripcion}</p>
-                      <p className={`text-sm font-bold mt-1 ${seleccionado ? 'text-orange-400' : 'text-gray-400'}`}>
+                      <p className="font-bold text-sm text-gray-800">
+                        {servicio.nombre}
+                      </p>
+
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {servicio.descripcion}
+                      </p>
+
+                      <p className={`text-sm font-bold mt-1 ${
+                        seleccionado
+                          ? 'text-orange-400'
+                          : 'text-gray-400'
+                      }`}>
                         ${servicio.precioBase?.toLocaleString('es-CL')}
                       </p>
                     </div>
+
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
-                      seleccionado ? 'border-orange-500 bg-orange-500' : 'border-gray-600'
+                      seleccionado
+                        ? 'border-orange-500 bg-orange-500'
+                        : 'border-gray-600'
                     }`}>
-                      {seleccionado && <span className="text-white text-xs">✓</span>}
+                      {seleccionado && (
+                        <span className="text-white text-xs">✓</span>
+                      )}
                     </div>
                   </div>
                 </button>
