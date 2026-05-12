@@ -16,13 +16,15 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Only auto-redirect on 401 for protected requests (not auth endpoints)
     const url = error.config?.url ?? ''
     if (error.response?.status === 401 && !url.includes('/api/auth/')) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      if (!url.includes('/api/admin/')) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('usuario')
+        window.dispatchEvent(new Event('auth:logout'))
+      }
     }
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
 );
 

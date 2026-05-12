@@ -4,8 +4,11 @@ import RutaProtegida      from './components/shared/RutaProtegida'
 import Home               from './pages/Home'
 import Cotizador          from './pages/Publico/Cotizador'
 import Login              from './pages/Publico/Login'
+import Register           from './pages/Publico/Register'
 import Agendamiento       from './pages/Publico/Agendamiento'
 import MisVehiculos       from './pages/Cliente/MisVehiculos'
+import Perfil             from './pages/Publico/Perfil'
+import TecnicoPerfil      from './pages/Tecnico/Perfil'
 
 import Dashboard          from './pages/Admin/Dashboard'
 import Agendamientos      from './pages/Admin/Agendamientos'
@@ -28,7 +31,10 @@ function App() {
           <Route path="/"            element={<Home />}         />
           <Route path="/cotizador"   element={<Cotizador />}    />
           <Route path="/login"       element={<Login />}        />
+          <Route path="/register"    element={<Register />}     />
           <Route path="/agendar"     element={<Agendamiento />} />
+          <Route path="/perfil"      element={<Perfil />}       />
+          <Route path="/tecnico/perfil" element={<TecnicoPerfil />} />
           <Route path="/mis-vehiculos" element={
             <RutaProtegida rolesPermitidos={['CLIENTE', 'ADMIN']}>
               <MisVehiculos />

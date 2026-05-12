@@ -23,12 +23,16 @@ export default function Login() {
     try {
       const { data } = await login({ email, password })
 
-      // Guarda en el contexto (que internamente guarda en localStorage)
-      loginCtx(data.token, { rol: data.rol, nombre: data.nombre })
+      loginCtx(data.token, {
+        token: data.token,
+        rol: data.rol,
+        nombre: data.nombre,
+        email: data.email ?? email,
+        usuarioId: data.usuarioId,
+      })
 
-      // Redirige según el rol del usuario
       if (data.rol === 'ADMIN' || data.rol === 'TECNICO') {
-        navigate('/dashboard')
+        navigate('/admin')
       } else {
         navigate('/')
       }

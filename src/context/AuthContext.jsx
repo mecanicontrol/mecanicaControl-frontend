@@ -15,6 +15,12 @@ export function AuthProvider({ children }) {
     setAuthListo(true)
   }, [])
 
+  useEffect(() => {
+    const handleForcedLogout = () => setUsuario(null)
+    window.addEventListener('auth:logout', handleForcedLogout)
+    return () => window.removeEventListener('auth:logout', handleForcedLogout)
+  }, [])
+
   const login = (token, datos) => {
     localStorage.setItem('token', token)
     localStorage.setItem('usuario', JSON.stringify(datos))

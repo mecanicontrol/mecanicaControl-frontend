@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { User, ChevronDown, LogOut } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 const LINKS_PUBLICO = [
@@ -24,15 +25,46 @@ const LINKS_ADMIN = [
   { to: '/cotizador',      label: 'Cotizador'     },
 ]
 
+const LINKS_TECNICO = [
+  { to: '/',          label: 'Inicio'    },
+  { to: '/cotizador', label: 'Cotizador' },
+]
+
+function getLinks(rol) {
+  if (rol === 'ADMIN')   return LINKS_ADMIN
+  if (rol === 'TECNICO') return LINKS_TECNICO
+  if (rol === 'CLIENTE') return LINKS_CLIENTE
+  return LINKS_PUBLICO
+}
+
+function getPerfilRoute(rol) {
+  if (rol === 'ADMIN')   return '/admin/mi-perfil'
+  if (rol === 'TECNICO') return '/tecnico/perfil'
+  return '/perfil'
+}
+
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const location   = useLocation()
-  const navigate   = useNavigate()
+  const [perfilOpen, setPerfilOpen] = useState(false)
+  const perfilRef = useRef(null)
+  const location = useLocation()
+  const navigate = useNavigate()
   const { usuario, logout } = useAuth()
 
-  const links = usuario?.rol === 'ADMIN' ? LINKS_ADMIN : usuario ? LINKS_CLIENTE : LINKS_PUBLICO
+  const links = getLinks(usuario?.rol)
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (perfilRef.current && !perfilRef.current.contains(e.target)) {
+        setPerfilOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleLogout = () => {
+    setPerfilOpen(false)
     logout()
     navigate('/')
   }
@@ -74,17 +106,60 @@ export default function Navbar() {
         {/* Botones derecha */}
         <div className="hidden md:flex items-center gap-2">
           {usuario ? (
-            <>
-              <span className="text-sm text-gray-400">
-                Hola, <span className="text-white font-semibold">{usuario.nombre ?? usuario.email}</span>
-              </span>
+            <div className="relative" ref={perfilRef}>
               <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-sm font-semibold text-gray-300 border border-gray-700 rounded hover:border-gray-500 hover:text-white transition-colors"
+                onClick={() => setPerfilOpen(!perfilOpen)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors"
               >
-                Cerrar sesión
+                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                  <User size={16} className="text-white" />
+                </div>
+                <span className="text-sm text-gray-300 hidden lg:block">
+                  {usuario.nombre ?? usuario.email}
+                </span>
+                <ChevronDown
+                  size={14}
+                  className={`text-gray-400 transition-transform ${perfilOpen ? 'rotate-180' : ''}`}
+                />
               </button>
-            </>
+
+              {perfilOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-xl shadow-xl py-2 z-50">
+                  <div className="px-4 py-3 border-b border-gray-700">
+                    <p className="text-sm font-semibold text-white truncate">
+                      {usuario.nombre ?? 'Usuario'}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate mt-0.5">
+                      {usuario.email ?? ''}
+                    </p>
+                    <span className="inline-block mt-1.5 px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-orange-500/20 text-orange-400">
+                      {usuario.rol ?? 'CLIENTE'}
+                    </span>
+                  </div>
+
+                  <div className="py-1">
+                    <Link
+                      to={getPerfilRoute(usuario.rol)}
+                      onClick={() => setPerfilOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                    >
+                      <User size={16} />
+                      Mi Perfil
+                    </Link>
+                  </div>
+
+                  <div className="border-t border-gray-700 pt-1">
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-400 hover:bg-gray-700 hover:text-red-400 transition-colors"
+                    >
+                      <LogOut size={16} />
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <Link
               to="/login"
@@ -125,12 +200,23 @@ export default function Navbar() {
           ))}
           <div className="mt-3 pt-3 border-t border-gray-800">
             {usuario ? (
-              <button
-                onClick={() => { handleLogout(); setMenuOpen(false) }}
-                className="w-full py-2 text-sm border border-gray-700 text-gray-300 rounded hover:border-gray-500 text-center"
-              >
-                Cerrar sesión
-              </button>
+              <>
+                <Link
+                  to={getPerfilRoute(usuario.rol)}
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 w-full py-2.5 text-sm text-gray-300 hover:text-white"
+                >
+                  <User size={16} />
+                  Mi Perfil
+                </Link>
+                <button
+                  onClick={() => { handleLogout(); setMenuOpen(false) }}
+                  className="flex items-center gap-2 w-full py-2.5 text-sm text-gray-400 hover:text-red-400"
+                >
+                  <LogOut size={16} />
+                  Cerrar sesión
+                </button>
+              </>
             ) : (
               <Link
                 to="/login"
