@@ -3,7 +3,8 @@ import { createContext, useContext, useState, useEffect } from 'react'
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [usuario, setUsuario] = useState(null)
+  const [usuario, setUsuario]       = useState(null)
+  const [authListo, setAuthListo]   = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -11,6 +12,13 @@ export function AuthProvider({ children }) {
     if (token && datos) {
       try { setUsuario(JSON.parse(datos)) } catch { setUsuario(null) }
     }
+    setAuthListo(true)
+  }, [])
+
+  useEffect(() => {
+    const handleForcedLogout = () => setUsuario(null)
+    window.addEventListener('auth:logout', handleForcedLogout)
+    return () => window.removeEventListener('auth:logout', handleForcedLogout)
   }, [])
 
   const login = (token, datos) => {
@@ -26,7 +34,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ usuario, login, logout }}>
+    <AuthContext.Provider value={{ usuario, login, logout, authListo }}>
       {children}
     </AuthContext.Provider>
   )

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Lock, Mail, Eye, EyeOff, Wrench, Package, BarChart } from "lucide-react";
+import { Lock, Mail, Eye, EyeOff, Wrench, Package, BarChart, Phone, MapPin, FileText } from "lucide-react";
 import { useState } from "react";
 
 export default function InicioSesion({
@@ -12,7 +12,15 @@ export default function InicioSesion({
   apellido,
   setNombre,
   setApellido,
-  esRegistro
+  telefono,
+  direccion,
+  rut,
+  setTelefono,
+  setDireccion,
+  setRut,
+  esRegistro,
+  error,
+  cargando,
 }) {
 
   const [showPassword, setShowPassword] = useState(false);
@@ -143,7 +151,28 @@ export default function InicioSesion({
             </div>
           </div>
 
-          {/* LINK LOGIN */}
+          {/* OPCIONES - solo login */}
+          {!esRegistro && (
+            <div className="flex justify-between items-center text-xs mb-5 text-gray-500">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" />
+                Mantener sesión
+              </label>
+
+              <Link className="text-blue-600 font-semibold">
+                ¿Olvidaste?
+              </Link>
+            </div>
+          )}
+
+          {/* ERROR */}
+          {error && (
+            <p className="text-red-500 text-sm text-center mb-4 bg-red-50 border border-red-200 rounded-lg py-2 px-3">
+              {error}
+            </p>
+          )}
+
+          {/* LINK LOGIN (cuando no es registro) */}
           {!esRegistro && (
             <p className="text-center text-sm text-gray-500 mt-2 mb-4">
               ¿Eres nuevo?{" "}
@@ -156,7 +185,7 @@ export default function InicioSesion({
             </p>
           )}
 
-          {/* LINK VOLVER LOGIN */}
+          {/* LINK VOLVER LOGIN (cuando es registro) */}
           {esRegistro && (
             <p className="text-center text-sm text-gray-500 mt-2 mb-4">
               ¿Ya tienes cuenta?{" "}
@@ -180,7 +209,6 @@ export default function InicioSesion({
                   className="bg-gray-100 px-4 py-3 rounded-lg w-full"
                 />
               </div>
-
               <div className="mb-4">
                 <input
                   placeholder="Apellido"
@@ -189,15 +217,64 @@ export default function InicioSesion({
                   className="bg-gray-100 px-4 py-3 rounded-lg w-full"
                 />
               </div>
+              <div className="mb-4">
+                <label className="text-gray-500 text-xs font-semibold">
+                  TELÉFONO
+                </label>
+                <div className="bg-gray-100 px-4 py-3 rounded-lg flex items-center mt-1">
+                  <Phone size={16} className="text-gray-400 mr-2" />
+                  <input
+                    type="tel"
+                    value={telefono}
+                    onChange={(e) => setTelefono(e.target.value)}
+                    placeholder="+56 9 1234 5678"
+                    className="bg-transparent outline-none w-full text-sm"
+                  />
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="text-gray-500 text-xs font-semibold">
+                  DIRECCIÓN
+                </label>
+                <div className="bg-gray-100 px-4 py-3 rounded-lg flex items-center mt-1">
+                  <MapPin size={16} className="text-gray-400 mr-2" />
+                  <input
+                    type="text"
+                    value={direccion}
+                    onChange={(e) => setDireccion(e.target.value)}
+                    placeholder="Av. Siempre Viva 742"
+                    className="bg-transparent outline-none w-full text-sm"
+                  />
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="text-gray-500 text-xs font-semibold">
+                  RUT
+                </label>
+                <div className="bg-gray-100 px-4 py-3 rounded-lg flex items-center mt-1">
+                  <FileText size={16} className="text-gray-400 mr-2" />
+                  <input
+                    type="text"
+                    value={rut}
+                    onChange={(e) => setRut(e.target.value)}
+                    placeholder="12.345.678-9"
+                    className="bg-transparent outline-none w-full text-sm"
+                  />
+                </div>
+              </div>
             </>
           )}
 
           {/* BOTÓN */}
-          <button 
+          <button
             onClick={handleLogin}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold"
+            disabled={cargando}
+            className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold transition-colors"
           >
-            {esRegistro ? "REGISTRARSE" : "INICIAR SESIÓN"}
+            {esRegistro 
+              ? (cargando ? 'Registrando...' : 'REGISTRARSE')
+              : (cargando ? 'Ingresando...' : 'INICIAR SESIÓN')
+            }
           </button>
 
         </div>

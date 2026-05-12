@@ -10,37 +10,14 @@ import { obtenerServicios } from '../../services/serviciosCatalogoService'
 import { useLocation } from "react-router-dom";
 
 export default function Cotizador() {
-
-  const location = useLocation();
-
-  const servicioSeleccionado = location.state?.servicio;
-  const precioSeleccionado = location.state?.precio;
-
-  const [modo, setModo] = useState('manual')
-
-  const [vehiculo, setVehiculo] = useState({
-    marca: '',
-    modelo: '',
-    anio: '',
-    kilometraje: ''
-  })
-
-  const [serviciosSeleccionados, setServiciosSeleccionados] = useState(
-    servicioSeleccionado
-      ? [
-          {
-            nombre: servicioSeleccionado,
-            precioBase: precioSeleccionado,
-          },
-        ]
-      : []
-  )
-
-  const [descripcionFallo, setDescripcionFallo] = useState('')
-  const [resultado, setResultado] = useState(null)
-  const [cargando, setCargando] = useState(false)
-  const [error, setError] = useState(null)
-  const [catalogoServicios, setCatalogoServicios] = useState([])
+  const [modo, setModo]                               = useState('manual')
+  const [vehiculo, setVehiculo]                       = useState({ marcaId: '', marca: '', modeloId: '', modelo: '', anio: '', kilometraje: '', patente: '' })
+  const [serviciosSeleccionados, setServiciosSeleccionados] = useState([])
+  const [descripcionFallo, setDescripcionFallo]       = useState('')
+  const [resultado, setResultado]                     = useState(null)
+  const [cargando, setCargando]                       = useState(false)
+  const [error, setError]                             = useState(null)
+  const [catalogoServicios, setCatalogoServicios]     = useState([])
 
   useEffect(() => {
     obtenerServicios()
