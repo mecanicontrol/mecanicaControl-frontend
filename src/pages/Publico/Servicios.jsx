@@ -38,18 +38,65 @@ export default function Servicios() {
       : "bg-white px-5 py-2 rounded-lg text-sm font-semibold shadow hover:bg-orange-100";
 
   const mostrarServicio = (servicio) => {
-    const categoria = servicio.categoria || "OTROS";
-    const nombre = servicio.nombre || "";
+  const categoria = (servicio.categoria || "").toLowerCase();
+  const nombre = (servicio.nombre || "").toLowerCase();
+  const descripcion = (servicio.descripcion || "").toLowerCase();
+  const textoBusqueda = busqueda.toLowerCase();
 
-    const coincideCategoria =
-      categoriaActiva === "TODOS" || categoriaActiva === categoria.toUpperCase();
+  const textoCompleto = `${categoria} ${nombre} ${descripcion}`;
 
-    const coincideBusqueda =
-      nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      categoria.toLowerCase().includes(busqueda.toLowerCase());
+  let coincideCategoria = false;
 
-    return coincideCategoria && coincideBusqueda;
-  };
+  if (categoriaActiva === "TODOS") {
+    coincideCategoria = true;
+  } else if (categoriaActiva === "MANTENCIÓN") {
+    coincideCategoria =
+      textoCompleto.includes("mant") ||
+      textoCompleto.includes("aceite") ||
+      textoCompleto.includes("filtro") ||
+      textoCompleto.includes("5000") ||
+      textoCompleto.includes("5.000") ||
+      textoCompleto.includes("10000") ||
+      textoCompleto.includes("10.000");
+  } else if (categoriaActiva === "DIAGNÓSTICO") {
+    coincideCategoria =
+      textoCompleto.includes("diagn") ||
+      textoCompleto.includes("scanner") ||
+      textoCompleto.includes("escáner") ||
+      textoCompleto.includes("obd");
+  } else if (categoriaActiva === "FRENOS") {
+    coincideCategoria =
+      textoCompleto.includes("freno") ||
+      textoCompleto.includes("pastilla") ||
+      textoCompleto.includes("zapata");
+  } else if (categoriaActiva === "SUSPENSIÓN") {
+    coincideCategoria =
+      textoCompleto.includes("susp") ||
+      textoCompleto.includes("amortiguador") ||
+      textoCompleto.includes("alineación") ||
+      textoCompleto.includes("alineacion") ||
+      textoCompleto.includes("neum");
+  } else if (categoriaActiva === "MOTOR") {
+    coincideCategoria =
+      textoCompleto.includes("motor") ||
+      textoCompleto.includes("correa") ||
+      textoCompleto.includes("distribución") ||
+      textoCompleto.includes("distribucion") ||
+      textoCompleto.includes("enfriamiento") ||
+      textoCompleto.includes("radiador");
+  } else if (categoriaActiva === "ELÉCTRICO") {
+    coincideCategoria =
+      textoCompleto.includes("elect") ||
+      textoCompleto.includes("eléctr") ||
+      textoCompleto.includes("bater") ||
+      textoCompleto.includes("alternador") ||
+      textoCompleto.includes("circuito");
+  }
+
+  const coincideBusqueda = textoCompleto.includes(textoBusqueda);
+
+  return coincideCategoria && coincideBusqueda;
+};
 
   const obtenerImagenServicio = (servicio) => {
     const nombre = servicio.nombre.toLowerCase();

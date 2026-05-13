@@ -15,6 +15,7 @@ const LINKS_PUBLICO = [
 const LINKS_CLIENTE = [
   { to: '/',               label: 'Inicio'        },
   { to: '/servicios',      label: 'Servicios'     },
+  { to: '/tienda',         label: 'Tienda'        },
   { to: '/cotizador',      label: 'Cotizador'     },
   { to: '/blog',           label: 'Blog'          },
   { to: '/mis-vehiculos',  label: 'Mis Vehículos' },
