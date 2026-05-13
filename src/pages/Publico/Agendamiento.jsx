@@ -4,12 +4,15 @@ import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import BarraProgreso from '../../components/agendamiento/BarraProgreso'
 import PasoFechaHora from '../../components/agendamiento/PasoFechaHora'
+import PasoCuenta from '../../components/agendamiento/PasoCuenta'
+import PasoConfirmacion from '../../components/agendamiento/PasoConfirmacion'
 import ResumenAgendamiento from '../../components/agendamiento/ResumenAgendamiento'
-import { crearAgendamiento } from '../../services/agendamientoService'
+import { useAuth } from '../../context/AuthContext'
 
 export default function Agendamiento() {
     const { state } = useLocation()
     const navigate = useNavigate()
+    const { usuario } = useAuth()
 
     const vehiculo = state?.vehiculo ?? {}
 
@@ -29,7 +32,6 @@ export default function Agendamiento() {
     const [paso, setPaso] = useState(1)
     const [fecha, setFecha] = useState(null)
     const [hora, setHora] = useState(null)
-    const [cargando, setCargando] = useState(false)
 
     useEffect(() => {
         if (!servicios.length) {
@@ -37,44 +39,12 @@ export default function Agendamiento() {
         }
     }, [servicios, navigate])
 
-    const validarSesion = () => {
-        const token = localStorage.getItem('token')
-
-        if (!token) {
-            alert('Debes iniciar sesión o registrarte antes de agendar un servicio.')
-            navigate('/login')
-            return false
-        }
-
-        return true
-    }
-
-    const avanzarPaso2 = () => {
-        if (!validarSesion()) return
-        setPaso(2)
-    }
-
-    const confirmarAgendamiento = async () => {
-        if (!validarSesion()) return
-
-        try {
-            setCargando(true)
-
-            const payload = {
-                vehiculoId: vehiculo?.id || null,
-                servicioIds: servicios.map(s => s.id),
-                fecha,
-                hora
-            }
-
-            await crearAgendamiento(payload)
-
+    const avanzarDesdeFechaHora = () => {
+        if (usuario) {
             setPaso(3)
-        } catch (error) {
-            console.error('Error al crear agendamiento:', error)
-            alert('Error al crear el agendamiento')
-        } finally {
-            setCargando(false)
+        } else {
+            alert('Debes iniciar sesión o registrarte antes de agendar un servicio.')
+            setPaso(2)
         }
     }
 
@@ -86,52 +56,35 @@ export default function Agendamiento() {
                 <BarraProgreso paso={paso} />
 
                 <div className="grid grid-cols-10 gap-6 pb-12">
-
                     <div className="col-span-7">
-
                         {paso === 1 && (
                             <PasoFechaHora
                                 fecha={fecha}
                                 onFecha={setFecha}
                                 hora={hora}
                                 onHora={setHora}
-                                onContinuar={avanzarPaso2}
+                                onContinuar={avanzarDesdeFechaHora}
                                 servicios={servicios}
                             />
                         )}
 
                         {paso === 2 && (
-                            <div className="bg-white rounded-2xl shadow p-8">
-                                <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                                    Confirmar Agendamiento
-                                </h2>
-
-                                <p className="text-gray-600 mb-6">
-                                    Revisa los datos del resumen y confirma tu cita.
-                                </p>
-
-                                <button
-                                    onClick={confirmarAgendamiento}
-                                    disabled={cargando}
-                                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl font-semibold transition"
-                                >
-                                    {cargando ? 'Confirmando...' : 'Confirmar Agendamiento'}
-                                </button>
-                            </div>
+                            <PasoCuenta
+                                onVolver={() => setPaso(1)}
+                                onContinuar={() => setPaso(3)}
+                                vehiculo={vehiculo}
+                            />
                         )}
 
                         {paso === 3 && (
-                            <div className="bg-white rounded-2xl shadow p-8 text-center">
-                                <h2 className="text-3xl font-bold text-green-600 mb-4">
-                                    ¡Agendamiento creado!
-                                </h2>
-
-                                <p className="text-gray-600">
-                                    Tu cita fue registrada correctamente.
-                                </p>
-                            </div>
+                            <PasoConfirmacion
+                                vehiculo={vehiculo}
+                                servicios={servicios}
+                                fecha={fecha}
+                                hora={hora}
+                                onVolver={() => setPaso(usuario ? 1 : 2)}
+                            />
                         )}
-
                     </div>
 
                     <div className="col-span-3">
@@ -142,7 +95,6 @@ export default function Agendamiento() {
                             hora={hora}
                         />
                     </div>
-
                 </div>
             </div>
 
