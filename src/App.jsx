@@ -1,52 +1,45 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
-import RutaProtegida from './components/shared/RutaProtegida'
+import { AuthProvider }   from './context/AuthContext'
+import RutaProtegida      from './components/shared/RutaProtegida'
+import Home               from './pages/Home'
+import Cotizador          from './pages/Publico/Cotizador'
+import Login              from './pages/Publico/Login'
+import Register           from './pages/Publico/Register'
+import Agendamiento       from './pages/Publico/Agendamiento'
+import Seguimiento        from './pages/Publico/Seguimiento'
+import Servicios          from './pages/Publico/Servicios'
+import Tienda             from './pages/Publico/Tienda'
+import MisVehiculos       from './pages/Cliente/MisVehiculos'
+import Perfil             from './pages/Publico/Perfil'
+import TecnicoPerfil      from './pages/Tecnico/Perfil'
 
-import Home from './pages/Home'
-import Cotizador from './pages/Publico/Cotizador'
-import Login from './pages/Publico/Login'
-import Register from './pages/Publico/Register'
-import Agendamiento from './pages/Publico/Agendamiento'
-import Servicios from './pages/Publico/Servicios'
-import Tienda from './pages/Publico/Tienda'
-import Perfil from './pages/Publico/Perfil'
-import AgendamientosCliente from './pages/Cliente/Agendamientos'
-import MisVehiculos from './pages/Cliente/MisVehiculos'
-import DashboardCliente from './components/cliente/DashboardCliente'
-import PerfilCliente from "./pages/Cliente/Perfil";
-import Historial from "./pages/Cliente/Historial";
-import TecnicoPerfil from './pages/Tecnico/Perfil'
-import DetalleVehiculo from './pages/Cliente/DetalleVehiculo'
-
-
-import Dashboard from './pages/Admin/Dashboard'
-import Agendamientos from './pages/Admin/Agendamientos'
-import OrdenesTrabajo from './pages/Admin/OrdenesTrabajo'
-import Inventario from './pages/Admin/Inventario'
-import Clientes from './pages/Admin/Clientes'
-import Tecnicos from './pages/Admin/Tecnicos'
-import Reportes from './pages/Admin/Reportes'
-import Catalogos from './pages/Admin/Catalogos'
-import Usuarios from './pages/Admin/Usuarios'
-import Configuracion from './pages/Admin/Configuracion'
-import MiPerfil from './pages/Admin/MiPerfil'
-
+import Dashboard          from './pages/Admin/Dashboard'
+import Agendamientos      from './pages/Admin/Agendamientos'
+import OrdenesTrabajo     from './pages/Admin/OrdenesTrabajo'
+import Inventario         from './pages/Admin/Inventario'
+import Clientes           from './pages/Admin/Clientes'
+import Tecnicos           from './pages/Admin/Tecnicos'
+import Reportes           from './pages/Admin/Reportes'
+import Catalogos          from './pages/Admin/Catalogos'
+import Usuarios           from './pages/Admin/Usuarios'
+import Configuracion      from './pages/Admin/Configuracion'
+import MiPerfil           from './pages/Admin/MiPerfil'
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-
-          {/* Públicas */}
-          <Route path="/" element={<Home />} />
-          <Route path="/cotizador" element={<Cotizador />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/agendar" element={<Agendamiento />} />
-          <Route path="/servicios" element={<Servicios />} />
-          <Route path="/tienda" element={<Tienda />} />
-          <Route path="/perfil" element={<Perfil />} />
+          {/* Rutas públicas */}
+          <Route path="/"            element={<Home />}         />
+          <Route path="/cotizador"   element={<Cotizador />}    />
+          <Route path="/login"       element={<Login />}        />
+          <Route path="/register"    element={<Register />}     />
+          <Route path="/agendar"      element={<Agendamiento />} />
+          <Route path="/seguimiento"  element={<Seguimiento />}  />
+          <Route path="/servicios"    element={<Servicios />}   />
+          <Route path="/tienda"      element={<Tienda />}      />
+          <Route path="/perfil"      element={<Perfil />}       />
           <Route path="/tecnico/perfil" element={<TecnicoPerfil />} />
 
           {/* Cliente */}

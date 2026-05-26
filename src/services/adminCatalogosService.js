@@ -25,3 +25,15 @@ export const crearModelo = (datos) =>
 // ─── Niveles de fidelización (read-only) ───
 export const obtenerNiveles = () =>
   api.get('/api/catalogos/niveles-fidelizacion')
+
+// ─── CRUD Servicios (ADMIN) ───
+export const obtenerServiciosTodos = ()           => api.get('/api/servicios/todos')
+export const crearServicio         = (datos)      => api.post('/api/servicios', datos)
+export const actualizarServicio    = (id, datos)  => api.put(`/api/servicios/${id}`, datos)
+export const eliminarServicio      = (id)         => api.delete(`/api/servicios/${id}`)
+
+// ─── CRUD Categorías de servicio (ADMIN) ───
+export const obtenerCategoriasAdmin = ()          => api.get('/api/admin/categorias-servicio')
+export const crearCategoria        = (datos)      => api.post('/api/admin/categorias-servicio', datos)
+export const actualizarCategoria   = (id, datos)  => api.put(`/api/admin/categorias-servicio/${id}`, datos)
+export const eliminarCategoria     = (id)         => api.delete(`/api/admin/categorias-servicio/${id}`)

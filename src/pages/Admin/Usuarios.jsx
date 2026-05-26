@@ -40,11 +40,14 @@ export default function Usuarios() {
     setCargando(true)
     setError(null)
     try {
-      const params = {}
-      if (filtroRol) params.rol = filtroRol
-      if (filtroBuscar) params.buscar = filtroBuscar
-      const { data } = await svc.obtenerUsuarios(params)
-      setUsuarios(Array.isArray(data) ? data : data?.content ?? [])
+      const { data } = await svc.obtenerUsuarios()
+      let lista = Array.isArray(data) ? data : data?.content ?? []
+      if (filtroRol) lista = lista.filter(u => (u.rol || u.rolNombre) === filtroRol)
+      if (filtroBuscar) {
+        const q = filtroBuscar.toLowerCase()
+        lista = lista.filter(u => `${u.nombre} ${u.apellido} ${u.email}`.toLowerCase().includes(q))
+      }
+      setUsuarios(lista)
     } catch {
       setError('Error al cargar usuarios')
       setUsuarios([])
