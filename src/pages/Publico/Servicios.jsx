@@ -1,39 +1,141 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../../components/Navbar";
 import { useNavigate } from "react-router-dom";
+import { obtenerServicios } from "../../services/serviciosCatalogoService";
+
+import correaImg from "../../assets/servicios/correa.jpg";
+import motorImg from "../../assets/servicios/motor.jpg";
+import enfriamientoImg from "../../assets/servicios/enfriamiento.jpg";
+import electricoImg from "../../assets/servicios/electrico.jpg";
+import bateriaImg from "../../assets/servicios/bateria.jpg";
+import frenosDelanterosImg from "../../assets/servicios/frenos-delanteros.jpg";
+import frenosTraserosImg from "../../assets/servicios/frenos-traseros.jpg";
+import suspensionImg from "../../assets/servicios/suspension.jpg";
+import amortiguadoresImg from "../../assets/servicios/amortiguadores.jpg";
+import soldaduraImg from "../../assets/servicios/soldadura.jpg";
+import alineacionImg from "../../assets/servicios/alineacion.jpg";
+import neumaticosImg from "../../assets/servicios/neumaticos.jpg";
+import mantencion5000Img from "../../assets/servicios/mantencion-5000.jpg";
+import mantencion10000Img from "../../assets/servicios/mantencion-10000.jpg";
+import diagnosticoImg from "../../assets/servicios/diagnostico.jpg";
 
 export default function Servicios() {
-
   const navigate = useNavigate();
 
   const [categoriaActiva, setCategoriaActiva] = useState("TODOS");
   const [busqueda, setBusqueda] = useState("");
+  const [servicios, setServicios] = useState([]);
+
+  useEffect(() => {
+    obtenerServicios()
+      .then(({ data }) => setServicios(data))
+      .catch((err) => console.error(err));
+  }, []);
 
   const botonFiltro = (categoria) =>
     categoriaActiva === categoria
       ? "bg-orange-500 text-white px-5 py-2 rounded-lg text-sm font-semibold shadow"
       : "bg-white px-5 py-2 rounded-lg text-sm font-semibold shadow hover:bg-orange-100";
 
-  const mostrarServicio = (categoria, nombre) => {
-    const coincideCategoria =
-      categoriaActiva === "TODOS" || categoriaActiva === categoria;
+  const mostrarServicio = (servicio) => {
+  const categoria = (servicio.categoria || "").toLowerCase();
+  const nombre = (servicio.nombre || "").toLowerCase();
+  const descripcion = (servicio.descripcion || "").toLowerCase();
+  const textoBusqueda = busqueda.toLowerCase();
 
-    const coincideBusqueda =
-      nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      categoria.toLowerCase().includes(busqueda.toLowerCase());
+  const textoCompleto = `${categoria} ${nombre} ${descripcion}`;
 
-    return coincideCategoria && coincideBusqueda;
+  let coincideCategoria = false;
+
+  if (categoriaActiva === "TODOS") {
+    coincideCategoria = true;
+  } else if (categoriaActiva === "MANTENCIÓN") {
+    coincideCategoria =
+      textoCompleto.includes("mant") ||
+      textoCompleto.includes("aceite") ||
+      textoCompleto.includes("filtro") ||
+      textoCompleto.includes("5000") ||
+      textoCompleto.includes("5.000") ||
+      textoCompleto.includes("10000") ||
+      textoCompleto.includes("10.000");
+  } else if (categoriaActiva === "DIAGNÓSTICO") {
+    coincideCategoria =
+      textoCompleto.includes("diagn") ||
+      textoCompleto.includes("scanner") ||
+      textoCompleto.includes("escáner") ||
+      textoCompleto.includes("obd");
+  } else if (categoriaActiva === "FRENOS") {
+    coincideCategoria =
+      textoCompleto.includes("freno") ||
+      textoCompleto.includes("pastilla") ||
+      textoCompleto.includes("zapata");
+  } else if (categoriaActiva === "SUSPENSIÓN") {
+    coincideCategoria =
+      textoCompleto.includes("susp") ||
+      textoCompleto.includes("amortiguador") ||
+      textoCompleto.includes("alineación") ||
+      textoCompleto.includes("alineacion") ||
+      textoCompleto.includes("neum");
+  } else if (categoriaActiva === "MOTOR") {
+    coincideCategoria =
+      textoCompleto.includes("motor") ||
+      textoCompleto.includes("correa") ||
+      textoCompleto.includes("distribución") ||
+      textoCompleto.includes("distribucion") ||
+      textoCompleto.includes("enfriamiento") ||
+      textoCompleto.includes("radiador");
+  } else if (categoriaActiva === "ELÉCTRICO") {
+    coincideCategoria =
+      textoCompleto.includes("elect") ||
+      textoCompleto.includes("eléctr") ||
+      textoCompleto.includes("bater") ||
+      textoCompleto.includes("alternador") ||
+      textoCompleto.includes("circuito");
+  }
+
+  const coincideBusqueda = textoCompleto.includes(textoBusqueda);
+
+  return coincideCategoria && coincideBusqueda;
+};
+
+  const obtenerImagenServicio = (servicio) => {
+    const nombre = servicio.nombre.toLowerCase();
+
+    if (nombre.includes("correa")) return correaImg;
+    if (nombre.includes("motor")) return motorImg;
+    if (nombre.includes("enfriamiento")) return enfriamientoImg;
+    if (nombre.includes("eléctr") || nombre.includes("electr")) return electricoImg;
+    if (nombre.includes("bater")) return bateriaImg;
+    if (nombre.includes("frenos delanteros")) return frenosDelanterosImg;
+    if (nombre.includes("frenos traseros")) return frenosTraserosImg;
+    if (nombre.includes("suspensión") || nombre.includes("suspension")) return suspensionImg;
+    if (nombre.includes("amortiguadores")) return amortiguadoresImg;
+    if (nombre.includes("soldadura") || nombre.includes("carrocer")) return soldaduraImg;
+    if (nombre.includes("alineación") || nombre.includes("alineacion")) return alineacionImg;
+    if (nombre.includes("neum")) return neumaticosImg;
+    if (nombre.includes("5.000") || nombre.includes("5000")) return mantencion5000Img;
+    if (nombre.includes("10.000") || nombre.includes("10000")) return mantencion10000Img;
+    if (nombre.includes("diagnóstico") || nombre.includes("diagnostico")) return diagnosticoImg;
+
+    return diagnosticoImg;
   };
+
+  const categorias = [
+    "TODOS",
+    "MANTENCIÓN",
+    "DIAGNÓSTICO",
+    "FRENOS",
+    "SUSPENSIÓN",
+    "MOTOR",
+    "ELÉCTRICO",
+  ];
 
   return (
     <>
       <Navbar />
 
       <div className="min-h-screen bg-gray-100">
-
-        {/* HERO */}
         <section className="relative h-[260px] flex items-center justify-center text-white overflow-hidden">
-
           <img
             src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1600&auto=format&fit=crop"
             alt="Servicios"
@@ -43,69 +145,33 @@ export default function Servicios() {
           <div className="absolute inset-0 bg-blue-950/85"></div>
 
           <div className="relative z-10 text-center">
-
             <p className="text-xs uppercase tracking-[3px] mb-3">
-              <span className="text-orange-500 font-semibold">
-                Inicio
-              </span>
-
-              <span className="text-gray-300 mx-2">
-                ›
-              </span>
-
-              <span className="text-white">
-                Servicios
-              </span>
+              <span className="text-orange-500 font-semibold">Inicio</span>
+              <span className="text-gray-300 mx-2">›</span>
+              <span className="text-white">Servicios</span>
             </p>
 
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight antialiased">
               NUESTROS SERVICIOS
             </h1>
-
           </div>
-
         </section>
 
-        {/* FILTROS */}
         <section className="max-w-7xl mx-auto px-6 py-8">
-
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-
             <div className="flex flex-wrap gap-3">
-
-              <button onClick={() => setCategoriaActiva("TODOS")} className={botonFiltro("TODOS")}>
-                TODOS
-              </button>
-
-              <button onClick={() => setCategoriaActiva("MANTENCIÓN")} className={botonFiltro("MANTENCIÓN")}>
-                MANTENCIÓN
-              </button>
-
-              <button onClick={() => setCategoriaActiva("DIAGNÓSTICO")} className={botonFiltro("DIAGNÓSTICO")}>
-                DIAGNÓSTICO
-              </button>
-
-              <button onClick={() => setCategoriaActiva("FRENOS")} className={botonFiltro("FRENOS")}>
-                FRENOS
-              </button>
-
-              <button onClick={() => setCategoriaActiva("SUSPENSIÓN")} className={botonFiltro("SUSPENSIÓN")}>
-                SUSPENSIÓN
-              </button>
-
-              <button onClick={() => setCategoriaActiva("MOTOR")} className={botonFiltro("MOTOR")}>
-                MOTOR
-              </button>
-
-              <button onClick={() => setCategoriaActiva("ELÉCTRICO")} className={botonFiltro("ELÉCTRICO")}>
-                ELÉCTRICO
-              </button>
-
+              {categorias.map((categoria) => (
+                <button
+                  key={categoria}
+                  onClick={() => setCategoriaActiva(categoria)}
+                  className={botonFiltro(categoria)}
+                >
+                  {categoria}
+                </button>
+              ))}
             </div>
 
-            {/* BUSCADOR */}
             <div className="relative w-full lg:w-[320px]">
-
               <input
                 type="text"
                 value={busqueda}
@@ -128,126 +194,76 @@ export default function Servicios() {
                   d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z"
                 />
               </svg>
-
             </div>
-
           </div>
-
         </section>
 
-        {/* GRID SERVICIOS */}
         <section className="max-w-7xl mx-auto px-6 pb-16">
-
           <div className="grid md:grid-cols-3 gap-8">
+            {servicios.filter(mostrarServicio).map((servicio) => (
+              <div
+                key={servicio.id}
+                className="bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition"
+              >
+                <img
+                  src={obtenerImagenServicio(servicio)}
+                  alt={servicio.nombre}
+                  className="w-full h-52 object-cover"
+                />
 
-            {mostrarServicio("MANTENCIÓN", "MANTENCIÓN 10.000 KM") && (
-              <div className="bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition">
-                <img src="https://images.unsplash.com/photo-1487754180451-c456f719a1fc?q=80&w=1200&auto=format&fit=crop" alt="Mantención" className="w-full h-52 object-cover" />
                 <div className="p-6">
-                  <span className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded">MANTENCIÓN</span>
-                  <h3 className="text-xl font-black mt-4 mb-3 leading-tight antialiased">MANTENCIÓN 10.000 KM</h3>
-                  <p className="text-gray-500 text-sm leading-6 mb-6">Revisión integral programada para mantener tu vehículo en óptimas condiciones.</p>
-                  <p className="text-2xl font-black text-blue-950 mb-6">$125.900</p>
+                  <span className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded">
+                    {servicio.categoria || "SERVICIO"}
+                  </span>
+
+                  <h3 className="text-xl font-black mt-4 mb-3 leading-tight antialiased">
+                    {servicio.nombre}
+                  </h3>
+
+                  <p className="text-gray-500 text-sm leading-6 mb-6">
+                    {servicio.descripcion}
+                  </p>
+
+                  <p className="text-2xl font-black text-blue-950 mb-6">
+                    ${servicio.precioBase?.toLocaleString("es-CL")}
+                  </p>
+
                   <div className="flex gap-3">
-                    <button onClick={() => navigate("/cotizador", { state: { servicio: "MANTENCIÓN 10.000 KM", precio: 125900 } })} className="flex-1 border border-orange-500 text-orange-500 py-2 rounded-lg font-semibold hover:bg-orange-500 hover:text-white transition">Cotizar</button>
-                    <button className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 transition">Agendar</button>
+                    <button
+                      onClick={() =>
+                        navigate("/cotizador", {
+                          state: {
+                            servicio: servicio.nombre,
+                            precio: servicio.precioBase,
+                          },
+                        })
+                      }
+                      className="flex-1 border border-orange-500 text-orange-500 py-2 rounded-lg font-semibold hover:bg-orange-500 hover:text-white transition"
+                    >
+                      Cotizar
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        navigate("/agendar", {
+                          state: {
+                            servicioId: servicio.id,
+                            servicio: servicio.nombre,
+                            descripcion: servicio.descripcion,
+                            precio: servicio.precioBase,
+                          },
+                        })
+                      }
+                      className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 transition"
+                    >
+                      Agendar
+                    </button>
                   </div>
                 </div>
               </div>
-            )}
-
-            {mostrarServicio("DIAGNÓSTICO", "ESCÁNER COMPUTARIZADO") && (
-              <div className="bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition">
-                <img src="https://images.unsplash.com/photo-1517524206127-48bbd363f3d7?q=80&w=1200&auto=format&fit=crop" alt="Diagnóstico" className="w-full h-52 object-cover" />
-                <div className="p-6">
-                  <span className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded">DIAGNÓSTICO</span>
-                  <h3 className="text-xl font-black mt-4 mb-3 leading-tight antialiased">ESCÁNER COMPUTARIZADO</h3>
-                  <p className="text-gray-500 text-sm leading-6 mb-6">Detección de fallas electrónicas y revisión técnica avanzada.</p>
-                  <p className="text-2xl font-black text-blue-950 mb-6">$45.000</p>
-                  <div className="flex gap-3">
-                    <button onClick={() => navigate("/cotizador", { state: { servicio: "ESCÁNER COMPUTARIZADO", precio: 45000 } })} className="flex-1 border border-orange-500 text-orange-500 py-2 rounded-lg font-semibold hover:bg-orange-500 hover:text-white transition">Cotizar</button>
-                    <button className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 transition">Agendar</button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {mostrarServicio("FRENOS", "CAMBIO DE PASTILLAS") && (
-              <div className="bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition">
-                <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1200&auto=format&fit=crop" alt="Frenos" className="w-full h-52 object-cover" />
-                <div className="p-6">
-                  <span className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded">FRENOS</span>
-                  <h3 className="text-xl font-black mt-4 mb-3 leading-tight antialiased">CAMBIO DE PASTILLAS</h3>
-                  <p className="text-gray-500 text-sm leading-6 mb-6">Instalación profesional de pastillas y revisión del sistema de frenado.</p>
-                  <p className="text-2xl font-black text-blue-950 mb-6">$89.900</p>
-                  <div className="flex gap-3">
-                    <button onClick={() => navigate("/cotizador", { state: { servicio: "CAMBIO DE PASTILLAS", precio: 89900 } })} className="flex-1 border border-orange-500 text-orange-500 py-2 rounded-lg font-semibold hover:bg-orange-500 hover:text-white transition">Cotizar</button>
-                    <button className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 transition">Agendar</button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {mostrarServicio("SUSPENSIÓN", "ALINEACIÓN Y BALANCEO") && (
-              <div className="bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition flex flex-col">
-                <img src="https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=1200&auto=format&fit=crop" alt="Suspensión" className="w-full h-52 object-cover" />
-                <div className="p-6 flex flex-col flex-1">
-                  <span className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded w-fit">SUSPENSIÓN</span>
-                  <h3 className="text-xl font-black mt-4 mb-3 leading-tight antialiased">ALINEACIÓN Y BALANCEO</h3>
-                  <p className="text-gray-500 text-sm leading-6 mb-8">Ajuste preciso de neumáticos y suspensión para una conducción segura.</p>
-                  <p className="text-2xl font-black text-blue-950 mb-8">$28.900</p>
-                  <div className="flex gap-3 mt-auto">
-                    <button onClick={() => navigate("/cotizador", { state: { servicio: "ALINEACIÓN Y BALANCEO", precio: 28900 } })} className="flex-1 border border-orange-500 text-orange-500 py-2 rounded-lg font-semibold hover:bg-orange-500 hover:text-white transition">Cotizar</button>
-                    <button className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 transition">Agendar</button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {mostrarServicio("MOTOR", "AJUSTE DE VÁLVULAS") && (
-              <div className="bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition flex flex-col">
-                <img src="https://images.pexels.com/photos/2244746/pexels-photo-2244746.jpeg" alt="Motor" className="w-full h-52 object-cover" />
-                <div className="p-6 flex flex-col flex-1">
-                  <span className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded w-fit">MOTOR</span>
-                  <h3 className="text-xl font-black mt-4 mb-3 leading-tight antialiased">AJUSTE DE VÁLVULAS</h3>
-                  <p className="text-gray-500 text-sm leading-6 mb-4">Sincronización técnica del tren de válvulas para mejorar el consumo de combustible y reducir emisiones.</p>
-                  <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
-                    <span>● 180 MIN</span>
-                    <span>● GARANTÍA 12M</span>
-                  </div>
-                  <p className="text-2xl font-black text-blue-950 mb-6">$185.000</p>
-                  <div className="flex gap-3 mt-auto">
-                    <button onClick={() => navigate("/cotizador", { state: { servicio: "AJUSTE DE VÁLVULAS", precio: 185000 } })} className="flex-1 border border-orange-500 text-orange-500 py-2 rounded-lg font-semibold hover:bg-orange-500 hover:text-white transition">Cotizar</button>
-                    <button className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 transition">Agendar</button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {mostrarServicio("ELÉCTRICO", "REVISIÓN DE BATERÍA") && (
-              <div className="bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition flex flex-col">
-                <img src="https://images.unsplash.com/photo-1530046339160-ce3e530c7d2f?q=80&w=1200&auto=format&fit=crop" alt="Batería" className="w-full h-52 object-cover" />
-                <div className="p-6 flex flex-col flex-1">
-                  <span className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded w-fit">ELÉCTRICO</span>
-                  <h3 className="text-xl font-black mt-4 mb-3 leading-tight antialiased">REVISIÓN DE BATERÍA</h3>
-                  <p className="text-gray-500 text-sm leading-6 mb-4">Test de carga y estado de salud de celdas. Incluye limpieza de terminales y chequeo del sistema eléctrico.</p>
-                  <div className="flex items-center gap-4 text-xs text-gray-400 mb-4">
-                    <span>● 30 MIN</span>
-                    <span>● CERTIFICADO</span>
-                  </div>
-                  <p className="text-2xl font-black text-blue-950 mb-6">$15.000</p>
-                  <div className="flex gap-3 mt-auto">
-                    <button onClick={() => navigate("/cotizador", { state: { servicio: "REVISIÓN DE BATERÍA", precio: 15000 } })} className="flex-1 border border-orange-500 text-orange-500 py-2 rounded-lg font-semibold hover:bg-orange-500 hover:text-white transition">Cotizar</button>
-                    <button className="flex-1 bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 transition">Agendar</button>
-                  </div>
-                </div>
-              </div>
-            )}
-
+            ))}
           </div>
-
         </section>
-
       </div>
     </>
   );
