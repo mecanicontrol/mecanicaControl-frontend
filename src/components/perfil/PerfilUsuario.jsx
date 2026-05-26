@@ -1,182 +1,337 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { User, Mail, Phone, MapPin, FileText, Shield, Save } from 'lucide-react'
+import { getMiPerfil, updatePerfil, cambiarPassword } from '../../services/usuarioService'
+import { User, Mail, Phone, MapPin, FileText, Shield, Save, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react'
+
+const ROL_LABEL = { ADMIN: 'Administrador', CLIENTE: 'Cliente', TECNICO: 'Técnico' }
+
+const inputClass = 'w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500 transition-colors placeholder-gray-600'
+const labelClass = 'block text-xs font-black text-gray-500 uppercase tracking-wider mb-1.5'
 
 export default function PerfilUsuario() {
   const { usuario } = useAuth()
 
-  const [editando, setEditando] = useState(false)
-  const [telefono, setTelefono] = useState(usuario?.telefono ?? '')
-  const [direccion, setDireccion] = useState(usuario?.direccion ?? '')
-  const [rut, setRut] = useState(usuario?.rut ?? '')
-  const [guardado, setGuardado] = useState(false)
+  // ── datos de cuenta (desde el backend)
+  const [cuenta, setCuenta] = useState(null)
+  const [cargando, setCargando] = useState(true)
 
-  const rolLabel = {
-    ADMIN: 'Administrador',
-    CLIENTE: 'Cliente',
-    TECNICO: 'Técnico',
+  // ── sección perfil (editable)
+  const [editandoPerfil, setEditandoPerfil] = useState(false)
+  const [perfil, setPerfil] = useState({ telefono: '', direccion: '', rut: '' })
+  const [guardandoPerfil, setGuardandoPerfil] = useState(false)
+  const [okPerfil, setOkPerfil] = useState(false)
+  const [errorPerfil, setErrorPerfil] = useState('')
+
+  // ── sección contraseña
+  const [pass, setPass] = useState({ passwordActual: '', passwordNuevo: '', confirmar: '' })
+  const [verActual, setVerActual] = useState(false)
+  const [verNuevo, setVerNuevo] = useState(false)
+  const [guardandoPass, setGuardandoPass] = useState(false)
+  const [okPass, setOkPass] = useState(false)
+  const [errorPass, setErrorPass] = useState('')
+
+  // ── carga inicial
+  useEffect(() => {
+    getMiPerfil()
+      .then(({ data }) => setCuenta(data))
+      .catch(() => {})
+      .finally(() => setCargando(false))
+  }, [])
+
+  // ── guardar perfil
+  const handleGuardarPerfil = async () => {
+    setGuardandoPerfil(true)
+    setErrorPerfil('')
+    try {
+      await updatePerfil({
+        telefono: perfil.telefono || null,
+        direccion: perfil.direccion || null,
+        rut: perfil.rut || null,
+        fotoUrl: null,
+      })
+      setOkPerfil(true)
+      setEditandoPerfil(false)
+      setTimeout(() => setOkPerfil(false), 3000)
+    } catch (e) {
+      setErrorPerfil(e.response?.data?.message ?? 'Error al guardar. Intenta de nuevo.')
+    } finally {
+      setGuardandoPerfil(false)
+    }
   }
 
-  const handleGuardar = () => {
-    setGuardado(true)
-    setEditando(false)
-    setTimeout(() => setGuardado(false), 3000)
+  // ── cambiar contraseña
+  const handleCambiarPassword = async () => {
+    setErrorPass('')
+    if (pass.passwordNuevo !== pass.confirmar) {
+      setErrorPass('Las contraseñas nuevas no coinciden.')
+      return
+    }
+    if (pass.passwordNuevo.length < 8) {
+      setErrorPass('La nueva contraseña debe tener mínimo 8 caracteres.')
+      return
+    }
+    setGuardandoPass(true)
+    try {
+      await cambiarPassword({
+        passwordActual: pass.passwordActual,
+        passwordNuevo:  pass.passwordNuevo,
+      })
+      setOkPass(true)
+      setPass({ passwordActual: '', passwordNuevo: '', confirmar: '' })
+      setTimeout(() => setOkPass(false), 3000)
+    } catch (e) {
+      setErrorPass(
+        e.response?.status === 400
+          ? 'La contraseña actual es incorrecta.'
+          : e.response?.data?.message ?? 'Error al cambiar la contraseña.'
+      )
+    } finally {
+      setGuardandoPass(false)
+    }
   }
 
-  if (!usuario) {
-    return <p className="text-gray-400 text-center py-8">Debes iniciar sesión para ver tu perfil.</p>
+  if (cargando) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-24 bg-gray-800 rounded-2xl animate-pulse" />
+        ))}
+      </div>
+    )
   }
+
+  const nombre = cuenta?.nombre ?? usuario?.nombre ?? '—'
+  const apellido = cuenta?.apellido ?? ''
+  const email  = cuenta?.email  ?? usuario?.email ?? '—'
+  const rol    = cuenta?.rol    ?? usuario?.rol   ?? '—'
 
   return (
-    <div className="bg-gray-800 rounded-2xl border border-gray-700 overflow-hidden">
+    <div className="space-y-6">
 
-      {/* Cabecera */}
-      <div className="bg-gradient-to-r from-orange-500/20 to-orange-500/5 px-8 py-6 border-b border-gray-700">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center">
-            <User size={28} className="text-white" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold">{usuario.nombre ?? 'Usuario'}</h2>
-            <span className="inline-block mt-1 px-3 py-0.5 text-xs font-bold uppercase rounded-full bg-orange-500/20 text-orange-400">
-              {rolLabel[usuario.rol] ?? usuario.rol}
-            </span>
-          </div>
+      {/* ── CABECERA ─────────────────────────────────────────────── */}
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex items-center gap-5">
+        <div className="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl font-black text-white">
+          {nombre?.[0]?.toUpperCase() ?? 'U'}
+        </div>
+        <div>
+          <h2 className="text-xl font-black text-white">{nombre} {apellido}</h2>
+          <p className="text-gray-400 text-sm mt-0.5">{email}</p>
+          <span className="inline-block mt-2 px-3 py-0.5 text-xs font-black uppercase rounded-full bg-orange-500/20 text-orange-400 tracking-wider">
+            {ROL_LABEL[rol] ?? rol}
+          </span>
         </div>
       </div>
 
-      {/* Datos de cuenta */}
-      <div className="px-8 py-6 space-y-6">
+      {/* ── DATOS DE CUENTA (solo lectura) ───────────────────────── */}
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+        <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-5 pb-3 border-b border-gray-800">
+          Datos de la cuenta
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { icon: User,   label: 'Nombre',  valor: `${nombre} ${apellido}`.trim() },
+            { icon: Mail,   label: 'Correo',  valor: email },
+            { icon: Shield, label: 'Rol',     valor: ROL_LABEL[rol] ?? rol },
+          ].map(({ icon: Icon, label, valor }) => (
+            <div key={label} className="bg-gray-800 rounded-xl p-4 flex items-center gap-3">
+              <Icon size={16} className="text-gray-500 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-gray-500">{label}</p>
+                <p className="text-sm font-bold text-white mt-0.5">{valor || '—'}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-        <div>
-          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
-            Datos de la Cuenta
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-900 rounded-lg p-4 flex items-center gap-3">
-              <User size={18} className="text-gray-500" />
-              <div>
-                <p className="text-xs text-gray-500">Nombre</p>
-                <p className="text-sm font-medium">{usuario.nombre ?? '—'}</p>
-              </div>
-            </div>
-            <div className="bg-gray-900 rounded-lg p-4 flex items-center gap-3">
-              <Mail size={18} className="text-gray-500" />
-              <div>
-                <p className="text-xs text-gray-500">Correo electrónico</p>
-                <p className="text-sm font-medium">{usuario.email ?? '—'}</p>
-              </div>
-            </div>
-            <div className="bg-gray-900 rounded-lg p-4 flex items-center gap-3">
-              <Shield size={18} className="text-gray-500" />
-              <div>
-                <p className="text-xs text-gray-500">Rol</p>
-                <p className="text-sm font-medium">{rolLabel[usuario.rol] ?? usuario.rol}</p>
-              </div>
-            </div>
-          </div>
+      {/* ── DATOS DEL PERFIL (editables) ─────────────────────────── */}
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-800">
+          <p className="text-xs font-black text-gray-500 uppercase tracking-widest">Datos del perfil</p>
+          {!editandoPerfil && (
+            <button
+              onClick={() => setEditandoPerfil(true)}
+              className="text-xs text-orange-500 hover:text-orange-400 font-black uppercase tracking-wider transition-colors"
+            >
+              Editar
+            </button>
+          )}
         </div>
 
-        {/* Datos de perfil */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-              Datos del Perfil
-            </h3>
-            {!editando && (
-              <button
-                onClick={() => setEditando(true)}
-                className="text-xs text-orange-500 hover:text-orange-400 font-medium"
-              >
-                Editar
-              </button>
+        {editandoPerfil ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className={labelClass}>Teléfono</label>
+                <input
+                  type="tel"
+                  value={perfil.telefono}
+                  onChange={e => setPerfil({ ...perfil, telefono: e.target.value })}
+                  placeholder="+56 9 1234 5678"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Dirección</label>
+                <input
+                  type="text"
+                  value={perfil.direccion}
+                  onChange={e => setPerfil({ ...perfil, direccion: e.target.value })}
+                  placeholder="Av. Siempre Viva 742"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>RUT</label>
+                <input
+                  type="text"
+                  value={perfil.rut}
+                  onChange={e => setPerfil({ ...perfil, rut: e.target.value })}
+                  placeholder="12.345.678-9"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            {errorPerfil && (
+              <p className="text-red-400 text-xs font-semibold bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+                {errorPerfil}
+              </p>
             )}
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-900 rounded-lg p-4 flex items-center gap-3">
-              <Phone size={18} className="text-gray-500" />
-              <div className="flex-1">
-                <p className="text-xs text-gray-500">Teléfono</p>
-                {editando ? (
-                  <input
-                    type="tel"
-                    value={telefono}
-                    onChange={(e) => setTelefono(e.target.value)}
-                    placeholder="+56 9 1234 5678"
-                    className="bg-gray-800 rounded px-2 py-1 text-sm w-full mt-1 border border-gray-700 focus:border-orange-500 outline-none"
-                  />
-                ) : (
-                  <p className="text-sm font-medium">{telefono || '—'}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-gray-900 rounded-lg p-4 flex items-center gap-3">
-              <MapPin size={18} className="text-gray-500" />
-              <div className="flex-1">
-                <p className="text-xs text-gray-500">Dirección</p>
-                {editando ? (
-                  <input
-                    type="text"
-                    value={direccion}
-                    onChange={(e) => setDireccion(e.target.value)}
-                    placeholder="Av. Siempre Viva 742"
-                    className="bg-gray-800 rounded px-2 py-1 text-sm w-full mt-1 border border-gray-700 focus:border-orange-500 outline-none"
-                  />
-                ) : (
-                  <p className="text-sm font-medium">{direccion || '—'}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-gray-900 rounded-lg p-4 flex items-center gap-3">
-              <FileText size={18} className="text-gray-500" />
-              <div className="flex-1">
-                <p className="text-xs text-gray-500">RUT</p>
-                {editando ? (
-                  <input
-                    type="text"
-                    value={rut}
-                    onChange={(e) => setRut(e.target.value)}
-                    placeholder="12.345.678-9"
-                    className="bg-gray-800 rounded px-2 py-1 text-sm w-full mt-1 border border-gray-700 focus:border-orange-500 outline-none"
-                  />
-                ) : (
-                  <p className="text-sm font-medium">{rut || '—'}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {editando && (
-            <div className="flex justify-end gap-3 mt-4">
+            <div className="flex justify-end gap-3">
               <button
-                onClick={() => {
-                  setEditando(false)
-                  setTelefono(usuario?.telefono ?? '')
-                  setDireccion(usuario?.direccion ?? '')
-                  setRut(usuario?.rut ?? '')
-                }}
-                className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg transition-colors"
+                onClick={() => { setEditandoPerfil(false); setErrorPerfil('') }}
+                className="px-5 py-2 text-sm text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 rounded-xl transition-colors"
               >
                 Cancelar
               </button>
               <button
-                onClick={handleGuardar}
-                className="px-4 py-2 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg flex items-center gap-2 transition-colors"
+                onClick={handleGuardarPerfil}
+                disabled={guardandoPerfil}
+                className="flex items-center gap-2 px-5 py-2 text-sm font-black bg-orange-500 hover:bg-orange-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl transition-colors uppercase tracking-wider"
               >
                 <Save size={14} />
-                Guardar cambios
+                {guardandoPerfil ? 'Guardando...' : 'Guardar cambios'}
               </button>
             </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { icon: Phone,    label: 'Teléfono',  valor: perfil.telefono },
+              { icon: MapPin,   label: 'Dirección', valor: perfil.direccion },
+              { icon: FileText, label: 'RUT',       valor: perfil.rut },
+            ].map(({ icon: Icon, label, valor }) => (
+              <div key={label} className="bg-gray-800 rounded-xl p-4 flex items-center gap-3">
+                <Icon size={16} className="text-gray-500 flex-shrink-0" />
+                <div>
+                  <p className="text-xs text-gray-500">{label}</p>
+                  <p className="text-sm font-bold text-white mt-0.5">{valor || '—'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {okPerfil && (
+          <div className="flex items-center gap-2 mt-4 text-green-400 text-sm font-semibold">
+            <CheckCircle size={16} /> Perfil actualizado correctamente.
+          </div>
+        )}
+      </div>
+
+      {/* ── CAMBIAR CONTRASEÑA ───────────────────────────────────── */}
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+        <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-5 pb-3 border-b border-gray-800">
+          Cambiar contraseña
+        </p>
+
+        <div className="space-y-4 max-w-md">
+
+          {/* contraseña actual */}
+          <div>
+            <label className={labelClass}>Contraseña actual</label>
+            <div className="flex items-center bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 gap-2 focus-within:border-orange-500 transition-colors">
+              <Lock size={14} className="text-gray-500 flex-shrink-0" />
+              <input
+                type={verActual ? 'text' : 'password'}
+                value={pass.passwordActual}
+                onChange={e => setPass({ ...pass, passwordActual: e.target.value })}
+                placeholder="••••••••"
+                className="bg-transparent outline-none text-sm text-white w-full placeholder-gray-600"
+              />
+              <button type="button" onClick={() => setVerActual(!verActual)} className="text-gray-500 hover:text-gray-300">
+                {verActual ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
+          </div>
+
+          {/* nueva contraseña */}
+          <div>
+            <label className={labelClass}>Nueva contraseña</label>
+            <div className="flex items-center bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 gap-2 focus-within:border-orange-500 transition-colors">
+              <Lock size={14} className="text-gray-500 flex-shrink-0" />
+              <input
+                type={verNuevo ? 'text' : 'password'}
+                value={pass.passwordNuevo}
+                onChange={e => setPass({ ...pass, passwordNuevo: e.target.value })}
+                placeholder="Mínimo 8 caracteres"
+                className="bg-transparent outline-none text-sm text-white w-full placeholder-gray-600"
+              />
+              <button type="button" onClick={() => setVerNuevo(!verNuevo)} className="text-gray-500 hover:text-gray-300">
+                {verNuevo ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
+          </div>
+
+          {/* confirmar */}
+          <div>
+            <label className={labelClass}>Confirmar nueva contraseña</label>
+            <input
+              type="password"
+              value={pass.confirmar}
+              onChange={e => setPass({ ...pass, confirmar: e.target.value })}
+              placeholder="••••••••"
+              className={`${inputClass} ${
+                pass.confirmar && pass.passwordNuevo !== pass.confirmar
+                  ? 'border-red-500'
+                  : pass.confirmar && pass.passwordNuevo === pass.confirmar
+                    ? 'border-green-500'
+                    : ''
+              }`}
+            />
+            {pass.confirmar && pass.passwordNuevo !== pass.confirmar && (
+              <p className="text-red-400 text-xs mt-1">Las contraseñas no coinciden</p>
+            )}
+            {pass.confirmar && pass.passwordNuevo === pass.confirmar && (
+              <p className="text-green-400 text-xs mt-1">✓ Las contraseñas coinciden</p>
+            )}
+          </div>
+
+          {errorPass && (
+            <p className="text-red-400 text-xs font-semibold bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+              {errorPass}
+            </p>
           )}
 
-          {guardado && (
-            <p className="text-sm text-green-400 mt-3">Perfil actualizado correctamente.</p>
+          <button
+            onClick={handleCambiarPassword}
+            disabled={guardandoPass || !pass.passwordActual || !pass.passwordNuevo || pass.passwordNuevo !== pass.confirmar}
+            className="flex items-center gap-2 px-6 py-2.5 text-sm font-black bg-orange-500 hover:bg-orange-600 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl transition-colors uppercase tracking-wider"
+          >
+            <Lock size={14} />
+            {guardandoPass ? 'Cambiando...' : 'Cambiar contraseña'}
+          </button>
+
+          {okPass && (
+            <div className="flex items-center gap-2 text-green-400 text-sm font-semibold">
+              <CheckCircle size={16} /> Contraseña actualizada correctamente.
+            </div>
           )}
         </div>
       </div>
+
     </div>
   )
 }

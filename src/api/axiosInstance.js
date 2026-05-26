@@ -18,7 +18,8 @@ api.interceptors.response.use(
   (error) => {
     const url = error.config?.url ?? ''
     if (error.response?.status === 401 && !url.includes('/api/auth/')) {
-      if (!url.includes('/api/admin/')) {
+      const usuario = JSON.parse(localStorage.getItem('usuario') || '{}')
+      if (usuario?.rol !== 'ADMIN') {
         localStorage.removeItem('token')
         localStorage.removeItem('usuario')
         window.dispatchEvent(new Event('auth:logout'))

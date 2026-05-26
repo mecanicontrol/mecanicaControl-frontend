@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import * as svc from '../../services/adminAgendamientoService'
 import { obtenerServicios } from '../../services/adminCatalogosService'
+import { obtenerUsuarios } from '../../services/adminUsuariosService'
 import {
   Search, Filter, Eye, CheckCircle, XCircle, Plus, Calendar,
-  Clock, User, Car, Wrench, AlertTriangle, ChevronDown, ChevronUp
+  AlertTriangle, Info
 } from 'lucide-react'
 
-const ESTADOS = ['', 'PENDIENTE', 'CONFIRMADO', 'CANCELADO', 'COMPLETADO']
+const ESTADOS = ['PENDIENTE', 'CONFIRMADO', 'CANCELADO', 'COMPLETADO']
 const ESTADO_COLORS = {
   PENDIENTE:  'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
   CONFIRMADO: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -20,27 +21,16 @@ export default function Agendamientos() {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
 
-  // Filtros
   const [filtroEstado, setFiltroEstado] = useState('')
-  const [filtroDesde, setFiltroDesde] = useState('')
-  const [filtroHasta, setFiltroHasta] = useState('')
-  const [filtroBuscar, setFiltroBuscar] = useState('')
+  const [filtroFecha, setFiltroFecha]   = useState('')
 
-  // Modal detalle
-  const [detalle, setDetalle] = useState(null)
-
-  // Modal confirmar
+  const [detalle, setDetalle]           = useState(null)
   const [confirmarModal, setConfirmarModal] = useState(null)
+  const [cancelarModal, setCancelarModal]   = useState(null)
+  const [crearModal, setCrearModal]         = useState(false)
 
-  // Modal cancelar
-  const [cancelarModal, setCancelarModal] = useState(null)
-
-  // Modal crear
-  const [crearModal, setCrearModal] = useState(false)
-
-  // Acción en progreso
   const [accionando, setAccionando] = useState(false)
-  const [mensaje, setMensaje] = useState(null)
+  const [mensaje, setMensaje]       = useState(null)
 
   const cargar = async () => {
     setCargando(true)
@@ -48,9 +38,7 @@ export default function Agendamientos() {
     try {
       const params = {}
       if (filtroEstado) params.estado = filtroEstado
-      if (filtroDesde) params.desde = filtroDesde
-      if (filtroHasta) params.hasta = filtroHasta
-      if (filtroBuscar) params.buscar = filtroBuscar
+      if (filtroFecha)  params.fecha  = filtroFecha
       const { data } = await svc.obtenerAgendamientosAdmin(params)
       setAgendamientos(Array.isArray(data) ? data : data?.content ?? [])
     } catch {
@@ -65,41 +53,40 @@ export default function Agendamientos() {
 
   const handleFiltrar = (e) => { e.preventDefault(); cargar() }
   const handleLimpiar = () => {
-    setFiltroEstado(''); setFiltroDesde(''); setFiltroHasta(''); setFiltroBuscar('')
+    setFiltroEstado(''); setFiltroFecha('')
     setTimeout(cargar, 0)
   }
 
-  // ─── Confirmar ───
   const abrirConfirmar = (a) => {
-    if (a.estado === 'COMPLETADO' || a.estado === 'CANCELADO') {
-      setMensaje({ tipo: 'error', texto: `No se puede confirmar un agendamiento ${a.estado}` })
+    if (a.estadoAgendamiento !== 'PENDIENTE') {
+      setMensaje({ tipo: 'error', texto: `Solo se pueden confirmar agendamientos PENDIENTE (actual: ${a.estadoAgendamiento})` })
       return
     }
     setConfirmarModal(a)
   }
 
-  const handleConfirmar = async () => {
+  const handleConfirmar = async (tecnicoId) => {
     if (!confirmarModal) return
     setAccionando(true)
     try {
-      await svc.confirmarAgendamiento(confirmarModal.id, null)
-      setMensaje({ tipo: 'ok', texto: 'Agendamiento confirmado. OT generada automáticamente.' })
+      await svc.confirmarAgendamiento(confirmarModal.idAgendamiento, tecnicoId)
+      setMensaje({ tipo: 'ok', texto: 'Agendamiento confirmado correctamente.' })
       setConfirmarModal(null)
       cargar()
-    } catch {
-      setMensaje({ tipo: 'error', texto: 'Error al confirmar. Verifica disponibilidad.' })
+    } catch (e) {
+      const msg = e.response?.data?.message ?? e.response?.data ?? 'Error al confirmar.'
+      setMensaje({ tipo: 'error', texto: typeof msg === 'string' ? msg : 'Error al confirmar.' })
     } finally {
       setAccionando(false)
     }
   }
 
-  // ─── Cancelar ───
   const abrirCancelar = (a) => {
-    if (a.estado === 'COMPLETADO') {
+    if (a.estadoAgendamiento === 'COMPLETADO') {
       setMensaje({ tipo: 'error', texto: 'No se puede cancelar un agendamiento COMPLETADO' })
       return
     }
-    if (a.estado === 'CANCELADO') {
+    if (a.estadoAgendamiento === 'CANCELADO') {
       setMensaje({ tipo: 'error', texto: 'El agendamiento ya está CANCELADO' })
       return
     }
@@ -110,7 +97,7 @@ export default function Agendamientos() {
     if (!cancelarModal) return
     setAccionando(true)
     try {
-      await svc.cancelarAgendamientoAdmin(cancelarModal.id)
+      await svc.cancelarAgendamientoAdmin(cancelarModal.idAgendamiento)
       setMensaje({ tipo: 'ok', texto: 'Agendamiento cancelado' })
       setCancelarModal(null)
       cargar()
@@ -121,10 +108,7 @@ export default function Agendamientos() {
     }
   }
 
-  const formatFecha = (f) => {
-    if (!f) return '—'
-    return new Date(f).toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' })
-  }
+  const fmt = (f) => f ? new Date(f).toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' }) : '—'
 
   return (
     <AdminLayout>
@@ -140,15 +124,16 @@ export default function Agendamientos() {
             onClick={() => setCrearModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors"
           >
-            <Plus size={16} />
-            Crear agendamiento
+            <Plus size={16} /> Crear agendamiento
           </button>
         </div>
 
         {/* Mensaje */}
         {mensaje && (
           <div className={`px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-2 ${
-            mensaje.tipo === 'ok' ? 'bg-green-500/10 text-green-400 border border-green-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30'
+            mensaje.tipo === 'ok'
+              ? 'bg-green-500/10 text-green-400 border border-green-500/30'
+              : 'bg-red-500/10 text-red-400 border border-red-500/30'
           }`}>
             {mensaje.tipo === 'ok' ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
             {mensaje.texto}
@@ -165,30 +150,14 @@ export default function Agendamientos() {
                 className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500"
               >
                 <option value="">Todos</option>
-                {ESTADOS.filter(Boolean).map(e => <option key={e} value={e}>{e}</option>)}
+                {ESTADOS.map(e => <option key={e} value={e}>{e}</option>)}
               </select>
             </div>
-            <div className="flex-1 min-w-[140px]">
-              <label className="text-xs text-gray-500 font-semibold block mb-1">Desde</label>
-              <input type="date" value={filtroDesde} onChange={(e) => setFiltroDesde(e.target.value)}
+            <div className="flex-1 min-w-[160px]">
+              <label className="text-xs text-gray-500 font-semibold block mb-1">Fecha</label>
+              <input type="date" value={filtroFecha} onChange={(e) => setFiltroFecha(e.target.value)}
                 className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500"
               />
-            </div>
-            <div className="flex-1 min-w-[140px]">
-              <label className="text-xs text-gray-500 font-semibold block mb-1">Hasta</label>
-              <input type="date" value={filtroHasta} onChange={(e) => setFiltroHasta(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500"
-              />
-            </div>
-            <div className="flex-[2] min-w-[200px]">
-              <label className="text-xs text-gray-500 font-semibold block mb-1">Buscar</label>
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                <input type="text" value={filtroBuscar} onChange={(e) => setFiltroBuscar(e.target.value)}
-                  placeholder="Cliente, patente, servicio..."
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg pl-9 pr-3 py-2 text-sm text-white outline-none focus:border-orange-500"
-                />
-              </div>
             </div>
             <div className="flex gap-2">
               <button type="submit"
@@ -207,8 +176,8 @@ export default function Agendamientos() {
 
         {/* Tabla */}
         {cargando ? (
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-12 text-center">
-            <p className="text-gray-500 animate-pulse">Cargando agendamientos...</p>
+          <div className="space-y-2">
+            {[1,2,3,4].map(i => <div key={i} className="h-14 bg-gray-800 rounded-xl animate-pulse" />)}
           </div>
         ) : error ? (
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-12 text-center">
@@ -236,37 +205,39 @@ export default function Agendamientos() {
                 </thead>
                 <tbody className="divide-y divide-gray-700/50">
                   {agendamientos.map((a) => (
-                    <tr key={a.id} className="hover:bg-gray-750 transition-colors">
+                    <tr key={a.idAgendamiento} className="hover:bg-gray-750 transition-colors">
                       <td className="px-4 py-3">
-                        <p className="text-white font-medium">{a.clienteNombre || '—'}</p>
-                        <p className="text-gray-500 text-xs">{a.clienteEmail || ''}</p>
+                        <p className="text-white font-medium">{a.nombreCliente || '—'}</p>
+                        <p className="text-gray-500 text-xs">{a.emailCliente || ''}</p>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-white">{a.vehiculoPatente || '—'}</p>
-                        <p className="text-gray-500 text-xs">{a.vehiculoMarca || ''} {a.vehiculoModelo || ''}</p>
+                        <p className="text-white font-mono">{a.patenteVehiculo || '—'}</p>
+                        <p className="text-gray-500 text-xs">{[a.marcaVehiculo, a.modeloVehiculo].filter(Boolean).join(' ')}</p>
                       </td>
-                      <td className="px-4 py-3 text-white">{a.servicioNombre || '—'}</td>
-                      <td className="px-4 py-3 text-gray-300 text-xs">{formatFecha(a.fechaInicio)}</td>
+                      <td className="px-4 py-3 text-white">{a.nombreServicio || '—'}</td>
+                      <td className="px-4 py-3 text-gray-300 text-xs">{fmt(a.fechaInicio)}</td>
                       <td className="px-4 py-3">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${ESTADO_COLORS[a.estado] || 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
-                          {a.estado || '—'}
+                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
+                          ESTADO_COLORS[a.estadoAgendamiento] || 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+                        }`}>
+                          {a.estadoAgendamiento || '—'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => setDetalle(detalle?.id === a.id ? null : a)}
+                          <button onClick={() => setDetalle(detalle?.idAgendamiento === a.idAgendamiento ? null : a)}
                             className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors" title="Ver detalle"
                           >
                             <Eye size={15} />
                           </button>
-                          {a.estado === 'PENDIENTE' && (
+                          {a.estadoAgendamiento === 'PENDIENTE' && (
                             <button onClick={() => abrirConfirmar(a)}
                               className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors" title="Confirmar"
                             >
                               <CheckCircle size={15} />
                             </button>
                           )}
-                          {a.estado !== 'COMPLETADO' && a.estado !== 'CANCELADO' && (
+                          {a.estadoAgendamiento !== 'COMPLETADO' && a.estadoAgendamiento !== 'CANCELADO' && (
                             <button onClick={() => abrirCancelar(a)}
                               className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors" title="Cancelar"
                             >
@@ -287,21 +258,33 @@ export default function Agendamientos() {
         {detalle && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setDetalle(null)}>
             <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-lg mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-5">
                 <h3 className="text-lg font-bold text-white">Detalle del Agendamiento</h3>
-                <button onClick={() => setDetalle(null)} className="text-gray-500 hover:text-white">&times;</button>
+                <button onClick={() => setDetalle(null)} className="text-gray-500 hover:text-white text-xl leading-none">&times;</button>
               </div>
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-gray-400">Cliente</span><span className="text-white">{detalle.clienteNombre || '—'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Email</span><span className="text-white">{detalle.clienteEmail || '—'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Vehículo</span><span className="text-white">{detalle.vehiculoPatente || '—'} — {detalle.vehiculoMarca || ''} {detalle.vehiculoModelo || ''}</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Servicio</span><span className="text-white">{detalle.servicioNombre || '—'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Fecha inicio</span><span className="text-white">{formatFecha(detalle.fechaInicio)}</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Fecha fin</span><span className="text-white">{formatFecha(detalle.fechaFin)}</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Estado</span>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${ESTADO_COLORS[detalle.estado] || ''}`}>{detalle.estado}</span>
+                {[
+                  ['Cliente',       detalle.nombreCliente],
+                  ['Email',         detalle.emailCliente],
+                  ['Teléfono',      detalle.telefonoCliente],
+                  ['Vehículo',      `${detalle.patenteVehiculo || '—'} — ${[detalle.marcaVehiculo, detalle.modeloVehiculo, detalle.anioVehiculo].filter(Boolean).join(' ')}`],
+                  ['Servicio',      detalle.nombreServicio],
+                  ['Técnico',       detalle.nombreTecnico || 'Sin asignar'],
+                  ['Fecha inicio',  fmt(detalle.fechaInicio)],
+                  ['Fecha fin',     fmt(detalle.fechaFin)],
+                  ['Precio',        detalle.precioAcordado != null ? `$${detalle.precioAcordado.toLocaleString('es-CL')}` : '—'],
+                ].map(([label, valor]) => (
+                  <div key={label} className="flex justify-between gap-4">
+                    <span className="text-gray-400 flex-shrink-0">{label}</span>
+                    <span className="text-white text-right">{valor || '—'}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Estado</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${ESTADO_COLORS[detalle.estadoAgendamiento] || ''}`}>
+                    {detalle.estadoAgendamiento}
+                  </span>
                 </div>
-                <div className="flex justify-between"><span className="text-gray-400">Precio</span><span className="text-white">${detalle.precioAcordado?.toLocaleString?.('es-CL') || '—'}</span></div>
               </div>
             </div>
           </div>
@@ -309,39 +292,13 @@ export default function Agendamientos() {
 
         {/* ─── MODAL CONFIRMAR ─── */}
         {confirmarModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setConfirmarModal(null)}>
-            <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-md mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                  <CheckCircle size={20} className="text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Confirmar Agendamiento</h3>
-                  <p className="text-gray-500 text-xs">Al confirmar se generará automáticamente la OT</p>
-                </div>
-              </div>
-              <div className="space-y-3 text-sm mb-6">
-                <div className="flex justify-between"><span className="text-gray-400">Cliente</span><span className="text-white">{confirmarModal.clienteNombre}</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Servicio</span><span className="text-white">{confirmarModal.servicioNombre}</span></div>
-                <div className="flex justify-between"><span className="text-gray-400">Fecha</span><span className="text-white">{formatFecha(confirmarModal.fechaInicio)}</span></div>
-              </div>
-              <p className="text-xs text-yellow-400/80 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2 mb-4">
-                La asignación de técnico se habilitará cuando la entidad esté disponible en el backend.
-              </p>
-              <div className="flex gap-3">
-                <button onClick={() => setConfirmarModal(null)}
-                  className="flex-1 px-4 py-2 text-sm border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button onClick={handleConfirmar} disabled={accionando}
-                  className="flex-1 px-4 py-2 text-sm font-semibold bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg transition-colors"
-                >
-                  {accionando ? 'Confirmando...' : 'Confirmar y generar OT'}
-                </button>
-              </div>
-            </div>
-          </div>
+          <ModalConfirmar
+            agendamiento={confirmarModal}
+            accionando={accionando}
+            onClose={() => setConfirmarModal(null)}
+            onConfirmar={handleConfirmar}
+            fmt={fmt}
+          />
         )}
 
         {/* ─── MODAL CANCELAR ─── */}
@@ -349,7 +306,7 @@ export default function Agendamientos() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setCancelarModal(null)}>
             <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-md mx-4 p-6" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
                   <XCircle size={20} className="text-red-400" />
                 </div>
                 <div>
@@ -357,7 +314,11 @@ export default function Agendamientos() {
                   <p className="text-gray-500 text-xs">Esta acción no se puede deshacer</p>
                 </div>
               </div>
-              <p className="text-sm text-gray-400 mb-4">¿Estás seguro de cancelar este agendamiento?</p>
+              <div className="space-y-2 text-sm mb-5">
+                <div className="flex justify-between"><span className="text-gray-400">Cliente</span><span className="text-white">{cancelarModal.nombreCliente}</span></div>
+                <div className="flex justify-between"><span className="text-gray-400">Servicio</span><span className="text-white">{cancelarModal.nombreServicio}</span></div>
+                <div className="flex justify-between"><span className="text-gray-400">Fecha</span><span className="text-white">{fmt(cancelarModal.fechaInicio)}</span></div>
+              </div>
               <div className="flex gap-3">
                 <button onClick={() => setCancelarModal(null)}
                   className="flex-1 px-4 py-2 text-sm border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
@@ -374,7 +335,7 @@ export default function Agendamientos() {
           </div>
         )}
 
-        {/* ─── MODAL CREAR (manual) ─── */}
+        {/* ─── MODAL CREAR ─── */}
         {crearModal && (
           <ModalCrearAgendamiento
             onClose={() => setCrearModal(false)}
@@ -387,11 +348,87 @@ export default function Agendamientos() {
   )
 }
 
-// ─── Sub-componente: Modal Crear Agendamiento Manual ───
+// ─── Modal Confirmar con selector de técnico ───
+function ModalConfirmar({ agendamiento, accionando, onClose, onConfirmar, fmt }) {
+  const [tecnicos, setTecnicos] = useState([])
+  const [tecnicoId, setTecnicoId] = useState('')
+  const [cargandoTec, setCargandoTec] = useState(true)
+
+  useEffect(() => {
+    obtenerUsuarios()
+      .then(({ data }) => {
+        const lista = Array.isArray(data) ? data : []
+        setTecnicos(lista.filter(u => u.rol === 'TECNICO'))
+      })
+      .catch(() => {})
+      .finally(() => setCargandoTec(false))
+  }, [])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+      <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-md mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+            <CheckCircle size={20} className="text-blue-400" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white">Confirmar Agendamiento</h3>
+            <p className="text-gray-500 text-xs">Asigna un técnico para confirmar la cita</p>
+          </div>
+        </div>
+
+        <div className="space-y-2 text-sm mb-4">
+          <div className="flex justify-between"><span className="text-gray-400">Cliente</span><span className="text-white">{agendamiento.nombreCliente}</span></div>
+          <div className="flex justify-between"><span className="text-gray-400">Servicio</span><span className="text-white">{agendamiento.nombreServicio}</span></div>
+          <div className="flex justify-between"><span className="text-gray-400">Fecha</span><span className="text-white">{fmt(agendamiento.fechaInicio)}</span></div>
+        </div>
+
+        <div className="mb-4">
+          <label className="text-xs text-gray-400 font-semibold block mb-1.5 uppercase tracking-wider">Técnico asignado *</label>
+          {cargandoTec ? (
+            <div className="h-10 bg-gray-700 rounded-lg animate-pulse" />
+          ) : tecnicos.length === 0 ? (
+            <div className="flex items-center gap-2 text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2">
+              <Info size={14} /> No hay técnicos registrados. Crea usuarios con rol TECNICO primero.
+            </div>
+          ) : (
+            <select value={tecnicoId} onChange={(e) => setTecnicoId(e.target.value)}
+              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500"
+            >
+              <option value="">Seleccionar técnico...</option>
+              {tecnicos.map(t => (
+                <option key={t.id} value={t.id}>{t.nombre} {t.apellido}</option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-blue-400/80 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2 mb-4">
+          <Info size={13} /> La confirmación genera automáticamente la Orden de Trabajo.
+        </div>
+
+        <div className="flex gap-3">
+          <button onClick={onClose}
+            className="flex-1 px-4 py-2 text-sm border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onConfirmar(tecnicoId || null)}
+            disabled={accionando || tecnicos.length === 0}
+            className="flex-1 px-4 py-2 text-sm font-semibold bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-lg transition-colors"
+          >
+            {accionando ? 'Confirmando...' : 'Confirmar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Modal Crear Agendamiento Manual ───
 function ModalCrearAgendamiento({ onClose, onCreado }) {
-  const [form, setForm] = useState({
-    patente: '', servicioId: '', fecha: '', hora: '', nota: ''
-  })
+  const [form, setForm] = useState({ patente: '', servicioId: '', fecha: '', hora: '', nota: '' })
   const [servicios, setServicios] = useState([])
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState(null)
@@ -411,11 +448,10 @@ function ModalCrearAgendamiento({ onClose, onCreado }) {
     setGuardando(true)
     setError(null)
     try {
-      const fechaInicio = `${form.fecha}T${form.hora}:00`
       await svc.crearAgendamientoAdmin({
         patente: form.patente.toUpperCase().trim(),
         idServicio: form.servicioId,
-        fechaInicio,
+        fechaInicio: `${form.fecha}T${form.hora}:00`,
         notaCliente: form.nota || undefined,
       })
       onCreado()
@@ -431,13 +467,13 @@ function ModalCrearAgendamiento({ onClose, onCreado }) {
       <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-white">Crear Agendamiento Manual</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-white">&times;</button>
+          <button onClick={onClose} className="text-gray-500 hover:text-white text-xl leading-none">&times;</button>
         </div>
         {error && <p className="text-red-400 text-sm mb-3 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="text-xs text-gray-400 font-semibold block mb-1">Patente *</label>
-            <input name="patente" value={form.patente} onChange={handleChange}
+            <input name="patente" value={form.patente} onChange={handleChange} placeholder="ABCD12"
               className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500 uppercase"
             />
           </div>
@@ -447,7 +483,9 @@ function ModalCrearAgendamiento({ onClose, onCreado }) {
               className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500"
             >
               <option value="">Seleccionar servicio</option>
-              {servicios.map(s => <option key={s.id} value={s.id}>{s.nombre} — ${s.precioBase?.toLocaleString?.('es-CL') || s.precioBase}</option>)}
+              {servicios.map(s => (
+                <option key={s.id} value={s.id}>{s.nombre} — ${s.precioBase?.toLocaleString?.('es-CL') || s.precioBase}</option>
+              ))}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-3">

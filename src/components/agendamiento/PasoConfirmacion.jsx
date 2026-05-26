@@ -5,11 +5,9 @@ import { crearAgendamiento } from '../../services/agendamientoService'
 
 function formatearFechaHora(horaStr) {
   if (!horaStr) return '—'
-  const str = horaStr.includes('Z') || horaStr.includes('+') ? horaStr : horaStr + 'Z'
-  const d = new Date(str)
+  const d = new Date(horaStr)
   if (isNaN(d.getTime())) return horaStr
   return d.toLocaleString('es-CL', {
-    timeZone: 'America/Santiago',
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit'
   })

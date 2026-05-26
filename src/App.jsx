@@ -6,6 +6,7 @@ import Cotizador          from './pages/Publico/Cotizador'
 import Login              from './pages/Publico/Login'
 import Register           from './pages/Publico/Register'
 import Agendamiento       from './pages/Publico/Agendamiento'
+import Seguimiento        from './pages/Publico/Seguimiento'
 import Servicios          from './pages/Publico/Servicios'
 import Tienda             from './pages/Publico/Tienda'
 import MisVehiculos       from './pages/Cliente/MisVehiculos'
@@ -34,8 +35,9 @@ function App() {
           <Route path="/cotizador"   element={<Cotizador />}    />
           <Route path="/login"       element={<Login />}        />
           <Route path="/register"    element={<Register />}     />
-          <Route path="/agendar"     element={<Agendamiento />} />
-          <Route path="/servicios"   element={<Servicios />}   />
+          <Route path="/agendar"      element={<Agendamiento />} />
+          <Route path="/seguimiento"  element={<Seguimiento />}  />
+          <Route path="/servicios"    element={<Servicios />}   />
           <Route path="/tienda"      element={<Tienda />}      />
           <Route path="/perfil"      element={<Perfil />}       />
           <Route path="/tecnico/perfil" element={<TecnicoPerfil />} />

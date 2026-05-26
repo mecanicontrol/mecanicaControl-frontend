@@ -101,35 +101,131 @@ function ModalForm({ titulo, onClose, onSubmit, guardando, error, children }) {
   )
 }
 
-// ─── TAB: SERVICIOS (read-only) ───
-function TabServicios() {
-  const { datos, cargando } = useLista(svc.obtenerServicios)
+// ─── TAB: SERVICIOS (CRUD) ───
+function TabServicios({ mensaje: setMsj }) {
+  const { datos, cargando, recargar } = useLista(svc.obtenerServiciosTodos)
+  const { datos: categorias } = useLista(svc.obtenerCategoriasAdmin)
+  const [modal, setModal] = useState(null) // null | 'crear' | servicio_obj
+  const [form, setForm] = useState({})
+  const [guardando, setGuardando] = useState(false)
+  const [errorForm, setErrorForm] = useState(null)
+
+  const abrirCrear = () => { setForm({ nombre: '', descripcion: '', duracionMinutos: '', precioBase: '', categoriaId: '', activo: true }); setModal('crear'); setErrorForm(null) }
+  const abrirEditar = (s) => { setForm({ nombre: s.nombre, descripcion: s.descripcion || '', duracionMinutos: s.duracionMinutos || '', precioBase: s.precioBase || '', categoriaId: '', activo: true }); setModal(s); setErrorForm(null) }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!form.nombre || !form.categoriaId) return setErrorForm('Nombre y categoría son requeridos')
+    setGuardando(true)
+    try {
+      const datos = { nombre: form.nombre, descripcion: form.descripcion, duracionMinutos: form.duracionMinutos ? Number(form.duracionMinutos) : null, precioBase: form.precioBase ? Number(form.precioBase) : 0, categoriaId: form.categoriaId }
+      if (modal === 'crear') { await svc.crearServicio(datos); setMsj({ tipo: 'ok', texto: 'Servicio creado' }) }
+      else { await svc.actualizarServicio(modal.id, datos); setMsj({ tipo: 'ok', texto: 'Servicio actualizado' }) }
+      setModal(null); recargar()
+    } catch { setErrorForm('Error al guardar el servicio') }
+    finally { setGuardando(false) }
+  }
+
+  const eliminar = async (s) => {
+    if (!confirm(`¿Desactivar "${s.nombre}"?`)) return
+    try { await svc.eliminarServicio(s.id); setMsj({ tipo: 'ok', texto: 'Servicio desactivado' }); recargar() }
+    catch { setMsj({ tipo: 'err', texto: 'Error al desactivar' }) }
+  }
+
   return (
-    <Tabla columnas={['Nombre', 'Precio base', 'Duración (min)', 'Categoría']} cargando={cargando} vacio="No hay servicios registrados"
-      datos={datos.map((s) => (
-        <tr key={s.id} className="hover:bg-gray-750">
-          <td className="px-4 py-3 text-white">{s.nombre}</td>
-          <td className="px-4 py-3 text-gray-300">${s.precioBase?.toLocaleString?.('es-CL') || s.precioBase || '—'}</td>
-          <td className="px-4 py-3 text-gray-300">{s.duracionMinutos || '—'}</td>
-          <td className="px-4 py-3 text-gray-400 text-xs">{s.categoriaNombre || '—'}</td>
-        </tr>
-      ))}
-    />
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <button onClick={abrirCrear} className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors">
+          <Plus size={14} /> Nuevo servicio
+        </button>
+      </div>
+      <Tabla columnas={['Nombre', 'Precio base', 'Duración', 'Categoría', 'Acciones']} cargando={cargando} vacio="No hay servicios"
+        datos={datos.map(s => (
+          <tr key={s.id} className="hover:bg-gray-750">
+            <td className="px-4 py-3 text-white">{s.nombre}</td>
+            <td className="px-4 py-3 text-gray-300">{s.precioBase ? `$${Number(s.precioBase).toLocaleString('es-CL')}` : '—'}</td>
+            <td className="px-4 py-3 text-gray-300">{s.duracionMinutos ? `${s.duracionMinutos} min` : '—'}</td>
+            <td className="px-4 py-3 text-gray-400 text-xs">{s.categoriaNombre || '—'}</td>
+            <td className="px-4 py-3 text-right">
+              <button onClick={() => abrirEditar(s)} className="text-xs text-blue-400 hover:text-blue-300 mr-3">Editar</button>
+              <button onClick={() => eliminar(s)} className="text-xs text-red-400 hover:text-red-300">Desactivar</button>
+            </td>
+          </tr>
+        ))}
+      />
+      {modal && (
+        <ModalForm titulo={modal === 'crear' ? 'Nuevo Servicio' : 'Editar Servicio'} onClose={() => setModal(null)} onSubmit={handleSubmit} guardando={guardando} error={errorForm}>
+          <input placeholder="Nombre *" value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500" />
+          <input placeholder="Descripción" value={form.descripcion} onChange={e => setForm({...form, descripcion: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500" />
+          <div className="grid grid-cols-2 gap-2">
+            <input type="number" placeholder="Duración (min)" value={form.duracionMinutos} onChange={e => setForm({...form, duracionMinutos: e.target.value})} className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500" />
+            <input type="number" placeholder="Precio base" value={form.precioBase} onChange={e => setForm({...form, precioBase: e.target.value})} className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500" />
+          </div>
+          <select value={form.categoriaId} onChange={e => setForm({...form, categoriaId: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500">
+            <option value="">Seleccionar categoría *</option>
+            {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+          </select>
+        </ModalForm>
+      )}
+    </div>
   )
 }
 
-// ─── TAB: CATEGORÍAS (read-only) ───
-function TabCategorias() {
-  const { datos, cargando } = useLista(svc.obtenerCategorias)
+// ─── TAB: CATEGORÍAS (CRUD) ───
+function TabCategorias({ mensaje: setMsj }) {
+  const { datos, cargando, recargar } = useLista(svc.obtenerCategoriasAdmin)
+  const [modal, setModal] = useState(null)
+  const [form, setForm] = useState({})
+  const [guardando, setGuardando] = useState(false)
+  const [errorForm, setErrorForm] = useState(null)
+
+  const abrirCrear  = () => { setForm({ nombre: '', descripcion: '' }); setModal('crear'); setErrorForm(null) }
+  const abrirEditar = (c) => { setForm({ nombre: c.nombre, descripcion: c.descripcion || '' }); setModal(c); setErrorForm(null) }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!form.nombre) return setErrorForm('El nombre es requerido')
+    setGuardando(true)
+    try {
+      if (modal === 'crear') { await svc.crearCategoria(form); setMsj({ tipo: 'ok', texto: 'Categoría creada' }) }
+      else { await svc.actualizarCategoria(modal.id, form); setMsj({ tipo: 'ok', texto: 'Categoría actualizada' }) }
+      setModal(null); recargar()
+    } catch { setErrorForm('Error al guardar') }
+    finally { setGuardando(false) }
+  }
+
+  const eliminar = async (c) => {
+    if (!confirm(`¿Eliminar "${c.nombre}"?`)) return
+    try { await svc.eliminarCategoria(c.id); setMsj({ tipo: 'ok', texto: 'Categoría eliminada' }); recargar() }
+    catch { setMsj({ tipo: 'err', texto: 'Error al eliminar (puede tener servicios asociados)' }) }
+  }
+
   return (
-    <Tabla columnas={['Nombre', 'Descripción']} cargando={cargando} vacio="No hay categorías registradas"
-      datos={datos.map((c) => (
-        <tr key={c.id || c.nombre} className="hover:bg-gray-750">
-          <td className="px-4 py-3 text-white">{c.nombre}</td>
-          <td className="px-4 py-3 text-gray-400 text-xs">{c.descripcion || '—'}</td>
-        </tr>
-      ))}
-    />
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <button onClick={abrirCrear} className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors">
+          <Plus size={14} /> Nueva categoría
+        </button>
+      </div>
+      <Tabla columnas={['Nombre', 'Descripción', 'Acciones']} cargando={cargando} vacio="No hay categorías"
+        datos={datos.map(c => (
+          <tr key={c.id} className="hover:bg-gray-750">
+            <td className="px-4 py-3 text-white">{c.nombre}</td>
+            <td className="px-4 py-3 text-gray-400 text-xs">{c.descripcion || '—'}</td>
+            <td className="px-4 py-3 text-right">
+              <button onClick={() => abrirEditar(c)} className="text-xs text-blue-400 hover:text-blue-300 mr-3">Editar</button>
+              <button onClick={() => eliminar(c)} className="text-xs text-red-400 hover:text-red-300">Eliminar</button>
+            </td>
+          </tr>
+        ))}
+      />
+      {modal && (
+        <ModalForm titulo={modal === 'crear' ? 'Nueva Categoría' : 'Editar Categoría'} onClose={() => setModal(null)} onSubmit={handleSubmit} guardando={guardando} error={errorForm}>
+          <input placeholder="Nombre *" value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500" />
+          <input placeholder="Descripción" value={form.descripcion} onChange={e => setForm({...form, descripcion: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500" />
+        </ModalForm>
+      )}
+    </div>
   )
 }
 
