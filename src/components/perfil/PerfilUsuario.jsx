@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { getMiPerfil, updatePerfil, cambiarPassword } from '../../services/usuarioService'
-import { User, Mail, Phone, MapPin, FileText, Shield, Save, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { obtenerMiPerfil as getMiPerfil, actualizarPerfil as updatePerfil, cambiarPassword } from '../../services/usuarioService'
+import { User, Mail, Phone, MapPin, FileText, Shield, Save, Lock, Eye, EyeOff, CheckCircle, Camera } from 'lucide-react'
 
 const ROL_LABEL = { ADMIN: 'Administrador', CLIENTE: 'Cliente', TECNICO: 'Técnico' }
 
@@ -10,6 +10,10 @@ const labelClass = 'block text-xs font-black text-gray-500 uppercase tracking-wi
 
 export default function PerfilUsuario() {
   const { usuario } = useAuth()
+  const bannerInputRef = useRef(null)
+
+  // ── foto de portada
+  const [fotoBanner, setFotoBanner] = useState(() => localStorage.getItem('fotoBannerPerfil') || null)
 
   // ── datos de cuenta (desde el backend)
   const [cuenta, setCuenta] = useState(null)
@@ -29,6 +33,20 @@ export default function PerfilUsuario() {
   const [guardandoPass, setGuardandoPass] = useState(false)
   const [okPass, setOkPass] = useState(false)
   const [errorPass, setErrorPass] = useState('')
+
+  // ── cambiar foto de portada
+  const handleCambiarBanner = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const base64 = ev.target.result
+      localStorage.setItem('fotoBannerPerfil', base64)
+      setFotoBanner(base64)
+      window.dispatchEvent(new Event('bannerPerfilActualizado'))
+    }
+    reader.readAsDataURL(file)
+  }
 
   // ── carga inicial
   useEffect(() => {
@@ -109,16 +127,43 @@ export default function PerfilUsuario() {
     <div className="space-y-6">
 
       {/* ── CABECERA ─────────────────────────────────────────────── */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex items-center gap-5">
-        <div className="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl font-black text-white">
-          {nombre?.[0]?.toUpperCase() ?? 'U'}
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+        {/* Banner / portada */}
+        <div
+          className="relative h-32 bg-cover bg-center"
+          style={fotoBanner
+            ? { backgroundImage: `url(${fotoBanner})` }
+            : { background: 'linear-gradient(135deg, #1f2937 0%, #111827 50%, #f97316 150%)' }
+          }
+        >
+          <button
+            onClick={() => bannerInputRef.current?.click()}
+            className="absolute bottom-2 right-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-black/50 hover:bg-black/70 text-white text-xs font-bold backdrop-blur-sm transition-colors"
+          >
+            <Camera size={13} />
+            Cambiar portada
+          </button>
+          <input
+            ref={bannerInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleCambiarBanner}
+          />
         </div>
-        <div>
-          <h2 className="text-xl font-black text-white">{nombre} {apellido}</h2>
-          <p className="text-gray-400 text-sm mt-0.5">{email}</p>
-          <span className="inline-block mt-2 px-3 py-0.5 text-xs font-black uppercase rounded-full bg-orange-500/20 text-orange-400 tracking-wider">
-            {ROL_LABEL[rol] ?? rol}
-          </span>
+
+        {/* Avatar + nombre */}
+        <div className="px-6 pb-5 flex items-end gap-4 -mt-8">
+          <div className="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl font-black text-white ring-4 ring-gray-900">
+            {nombre?.[0]?.toUpperCase() ?? 'U'}
+          </div>
+          <div className="pb-1">
+            <h2 className="text-xl font-black text-white">{nombre} {apellido}</h2>
+            <p className="text-gray-400 text-sm">{email}</p>
+            <span className="inline-block mt-1 px-3 py-0.5 text-xs font-black uppercase rounded-full bg-orange-500/20 text-orange-400 tracking-wider">
+              {ROL_LABEL[rol] ?? rol}
+            </span>
+          </div>
         </div>
       </div>
 

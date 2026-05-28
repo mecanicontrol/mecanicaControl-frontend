@@ -171,7 +171,7 @@ export default function Navbar() {
                   </div>
 
                   <button
-                    onClick={() => navigate('/cliente/dashboard')}
+                    onClick={() => navigate(usuario?.rol === 'ADMIN' ? '/admin' : '/cliente/dashboard')}
                     className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-700 text-left"
                   >
                     <LayoutDashboard size={18} />
@@ -179,7 +179,7 @@ export default function Navbar() {
                   </button>
 
                   <button
-                    onClick={() => navigate('/cliente/perfil')}
+                    onClick={() => navigate(usuario?.rol === 'ADMIN' ? '/admin/mi-perfil' : '/cliente/perfil')}
                     className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-700 text-left"
                   >
                     <User size={18} />

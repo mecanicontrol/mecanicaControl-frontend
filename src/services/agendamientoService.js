@@ -19,3 +19,6 @@ export const cancelarAgendamiento = (id) =>
 
 export const confirmarAgendamiento = (id) =>
   api.patch(`/api/agendamientos/${id}/confirmar`)
+
+export const obtenerSeguimientoAgendamiento = (agendamientoId) =>
+  api.get(`/api/seguimiento/agendamiento/${agendamientoId}`)
