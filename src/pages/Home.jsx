@@ -110,7 +110,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/75 to-black/20" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-        <div className="relative max-w-7xl mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center w-full">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 grid lg:grid-cols-2 gap-8 lg:gap-12 items-center w-full">
 
           {/* texto */}
           <div>
@@ -118,7 +118,7 @@ export default function Home() {
               <span className="w-6 h-px bg-orange-400" />
               Ingeniería automotriz de precisión
             </span>
-            <h1 className="text-5xl md:text-6xl font-black text-white leading-tight mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-tight mb-6">
               TU VEHÍCULO<br />
               EN <span className="text-orange-500">MANOS</span><br />
               EXPERTAS
@@ -160,7 +160,7 @@ export default function Home() {
           </div>
 
           {/* cotizador rápido */}
-          <div className="bg-white rounded-2xl p-8 shadow-2xl">
+          <div className="bg-white rounded-2xl p-5 sm:p-8 shadow-2xl w-full">
             <h2 className="text-gray-900 font-black text-xl uppercase mb-1 tracking-wide">Cotizador rápido</h2>
             <p className="text-gray-400 text-xs mb-6">Ingresa los datos y recibe una estimación al instante</p>
 
@@ -247,9 +247,9 @@ export default function Home() {
       </section>
 
       {/* ── SERVICIOS DESTACADOS ──────────────────────────────────── */}
-      <section className="py-24 px-6 bg-gray-50">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-end justify-between mb-14">
+          <div className="flex items-end justify-between mb-10 sm:mb-14">
             <div>
               <span className="text-orange-500 text-xs font-black uppercase tracking-widest">Especialidades</span>
               <h2 className="text-3xl md:text-4xl font-black text-gray-900 mt-2">
@@ -333,19 +333,19 @@ export default function Home() {
       </section>
 
       {/* ── POR QUÉ ELEGIRNOS ─────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-gray-900">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 bg-gray-900">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
           {/* imagen */}
-          <div className="relative">
+          <div className="relative pb-6 pr-6">
             <img
               src="https://images.unsplash.com/photo-1615906655593-ad0386982a0f?w=800&auto=format&fit=crop"
               alt="Taller mecánico"
-              className="rounded-2xl w-full h-[460px] object-cover"
+              className="rounded-2xl w-full h-64 sm:h-[460px] object-cover"
             />
             {/* badge flotante */}
-            <div className="absolute -bottom-6 -right-6 bg-orange-500 rounded-2xl p-6 text-center shadow-xl">
-              <p className="text-white font-black text-4xl">+15</p>
+            <div className="absolute bottom-0 right-0 bg-orange-500 rounded-2xl p-4 sm:p-6 text-center shadow-xl">
+              <p className="text-white font-black text-3xl sm:text-4xl">+15</p>
               <p className="text-orange-200 text-xs font-bold uppercase tracking-wider">Años de<br />excelencia</p>
             </div>
           </div>
@@ -380,7 +380,7 @@ export default function Home() {
       </section>
 
       {/* ── PROCESO ───────────────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-orange-500 text-xs font-black uppercase tracking-widest">Cómo funciona</span>
@@ -411,7 +411,7 @@ export default function Home() {
       </section>
 
       {/* ── TESTIMONIOS ───────────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-gray-50">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-orange-500 text-xs font-black uppercase tracking-widest">Experiencias</span>
@@ -445,11 +445,11 @@ export default function Home() {
       </section>
 
       {/* ── CTA + CONTACTO ────────────────────────────────────────── */}
-      <section className="py-24 px-6 bg-gray-900">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 bg-gray-900">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
 
           <div>
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-5">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-5">
               ¿Tu auto te está dando problemas?<br />
               <span className="text-orange-500">Tráenoslo hoy.</span>
             </h2>
@@ -474,7 +474,7 @@ export default function Home() {
           </div>
 
           {/* info de contacto */}
-          <div className="bg-gray-800 rounded-2xl p-8 space-y-5 border border-gray-700">
+          <div className="bg-gray-800 rounded-2xl p-5 sm:p-8 space-y-5 border border-gray-700">
             <h3 className="text-white font-black text-lg uppercase">¿Dónde encontrarnos?</h3>
             <div className="flex gap-4">
               <div className="w-10 h-10 bg-orange-500/10 rounded-xl flex items-center justify-center flex-shrink-0">

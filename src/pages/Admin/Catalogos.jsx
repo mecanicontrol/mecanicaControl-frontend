@@ -229,43 +229,56 @@ function TabCategorias({ mensaje: setMsj }) {
   )
 }
 
-// ─── TAB: MARCAS (read + create) ───
+// ─── TAB: MARCAS (CRUD) ───
 function TabMarcas({ mensaje: setMsj }) {
   const { datos, cargando, recargar } = useLista(svc.obtenerMarcas)
-  const [modal, setModal] = useState(false)
-  const [form, setForm] = useState({ nombre: '' })
+  const [modal, setModal]     = useState(null) // null | 'crear' | objeto
+  const [form, setForm]       = useState({ nombre: '' })
   const [guardando, setGuardando] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setError]     = useState(null)
+
+  const abrirCrear  = () => { setForm({ nombre: '' });         setModal('crear'); setError(null) }
+  const abrirEditar = (m) => { setForm({ nombre: m.nombre }); setModal(m);       setError(null) }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.nombre) return setError('El nombre es requerido')
     setGuardando(true)
     try {
-      await svc.crearMarca(form)
-      setMsj({ tipo: 'ok', texto: 'Marca creada' })
-      setModal(false); recargar()
-    } catch { setError('Error al crear la marca') }
+      if (modal === 'crear') { await svc.crearMarca(form);                       setMsj({ tipo: 'ok', texto: 'Marca creada' }) }
+      else                   { await svc.actualizarMarca(modal.id, form);        setMsj({ tipo: 'ok', texto: 'Marca actualizada' }) }
+      setModal(null); recargar()
+    } catch { setError('Error al guardar la marca') }
     finally { setGuardando(false) }
+  }
+
+  const eliminar = async (m) => {
+    if (!confirm(`¿Eliminar la marca "${m.nombre}"? Se eliminará también si no tiene modelos asociados.`)) return
+    try { await svc.eliminarMarca(m.id); setMsj({ tipo: 'ok', texto: 'Marca eliminada' }); recargar() }
+    catch { setMsj({ tipo: 'err', texto: 'No se puede eliminar (puede tener modelos o vehículos asociados)' }) }
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <button onClick={() => { setModal(true); setForm({ nombre: '' }); setError(null) }}
+        <button onClick={abrirCrear}
           className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors">
           <Plus size={14} /> Nueva marca
         </button>
       </div>
-      <Tabla columnas={['Nombre']} cargando={cargando} vacio="No hay marcas registradas"
+      <Tabla columnas={['Nombre', 'Acciones']} cargando={cargando} vacio="No hay marcas registradas"
         datos={datos.map((m) => (
           <tr key={m.id} className="hover:bg-gray-750">
             <td className="px-4 py-3 text-white">{m.nombre}</td>
+            <td className="px-4 py-3 text-right">
+              <button onClick={() => abrirEditar(m)} className="text-xs text-blue-400 hover:text-blue-300 mr-3">Editar</button>
+              <button onClick={() => eliminar(m)}    className="text-xs text-red-400 hover:text-red-300">Eliminar</button>
+            </td>
           </tr>
         ))}
       />
       {modal && (
-        <ModalForm titulo="Nueva Marca" onClose={() => setModal(false)} onSubmit={handleSubmit} guardando={guardando} error={error}>
+        <ModalForm titulo={modal === 'crear' ? 'Nueva Marca' : 'Editar Marca'} onClose={() => setModal(null)} onSubmit={handleSubmit} guardando={guardando} error={error}>
           <input placeholder="Nombre *" value={form.nombre} onChange={(e) => setForm({ nombre: e.target.value })}
             className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500" />
         </ModalForm>
@@ -274,49 +287,67 @@ function TabMarcas({ mensaje: setMsj }) {
   )
 }
 
-// ─── TAB: MODELOS (read + create) ───
+// ─── TAB: MODELOS (CRUD) ───
 function TabModelos({ mensaje: setMsj }) {
   const { datos: modelos, cargando, recargar } = useLista(svc.obtenerModelos)
   const { datos: marcas } = useLista(svc.obtenerMarcas)
-  const [modal, setModal] = useState(false)
-  const [form, setForm] = useState({ nombre: '', marcaVehiculoId: '' })
+  const [modal, setModal]     = useState(null) // null | 'crear' | objeto
+  const [form, setForm]       = useState({ nombre: '', marcaId: '' })
   const [guardando, setGuardando] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setError]     = useState(null)
+
+  const abrirCrear  = () => { setForm({ nombre: '', marcaId: '' });                               setModal('crear'); setError(null) }
+  const abrirEditar = (m) => { setForm({ nombre: m.nombre, marcaId: m.marca?.id || '' });         setModal(m);       setError(null) }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.nombre || !form.marcaVehiculoId) return setError('Nombre y marca son requeridos')
+    if (!form.nombre || !form.marcaId) return setError('Nombre y marca son requeridos')
     setGuardando(true)
     try {
-      const marcaObj = marcas.find(m => m.id === form.marcaVehiculoId || String(m.id) === String(form.marcaVehiculoId))
-      await svc.crearModelo({ nombre: form.nombre, marca: marcaObj || { id: form.marcaVehiculoId } })
-      setMsj({ tipo: 'ok', texto: 'Modelo creado' })
-      setModal(false); recargar()
-    } catch { setError('Error al crear el modelo') }
+      if (modal === 'crear') {
+        const marcaObj = marcas.find(m => String(m.id) === String(form.marcaId))
+        await svc.crearModelo({ nombre: form.nombre, marca: marcaObj || { id: form.marcaId } })
+        setMsj({ tipo: 'ok', texto: 'Modelo creado' })
+      } else {
+        await svc.actualizarModelo(modal.id, { nombre: form.nombre, marcaId: form.marcaId })
+        setMsj({ tipo: 'ok', texto: 'Modelo actualizado' })
+      }
+      setModal(null); recargar()
+    } catch { setError('Error al guardar el modelo') }
     finally { setGuardando(false) }
+  }
+
+  const eliminar = async (m) => {
+    if (!confirm(`¿Eliminar el modelo "${m.nombre}"?`)) return
+    try { await svc.eliminarModelo(m.id); setMsj({ tipo: 'ok', texto: 'Modelo eliminado' }); recargar() }
+    catch { setMsj({ tipo: 'err', texto: 'No se puede eliminar (puede tener vehículos asociados)' }) }
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <button onClick={() => { setModal(true); setForm({ nombre: '', marcaVehiculoId: '' }); setError(null) }}
+        <button onClick={abrirCrear}
           className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors">
           <Plus size={14} /> Nuevo modelo
         </button>
       </div>
-      <Tabla columnas={['Nombre', 'Marca']} cargando={cargando} vacio="No hay modelos registrados"
+      <Tabla columnas={['Nombre', 'Marca', 'Acciones']} cargando={cargando} vacio="No hay modelos registrados"
         datos={modelos.map((m) => (
           <tr key={m.id} className="hover:bg-gray-750">
             <td className="px-4 py-3 text-white">{m.nombre}</td>
-            <td className="px-4 py-3 text-gray-400">{m.marca?.nombre || m.nombreMarca || '—'}</td>
+            <td className="px-4 py-3 text-gray-400">{m.marca?.nombre || '—'}</td>
+            <td className="px-4 py-3 text-right">
+              <button onClick={() => abrirEditar(m)} className="text-xs text-blue-400 hover:text-blue-300 mr-3">Editar</button>
+              <button onClick={() => eliminar(m)}    className="text-xs text-red-400 hover:text-red-300">Eliminar</button>
+            </td>
           </tr>
         ))}
       />
       {modal && (
-        <ModalForm titulo="Nuevo Modelo" onClose={() => setModal(false)} onSubmit={handleSubmit} guardando={guardando} error={error}>
+        <ModalForm titulo={modal === 'crear' ? 'Nuevo Modelo' : 'Editar Modelo'} onClose={() => setModal(null)} onSubmit={handleSubmit} guardando={guardando} error={error}>
           <input placeholder="Nombre *" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })}
             className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500" />
-          <select value={form.marcaVehiculoId} onChange={(e) => setForm({ ...form, marcaVehiculoId: e.target.value })}
+          <select value={form.marcaId} onChange={(e) => setForm({ ...form, marcaId: e.target.value })}
             className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500">
             <option value="">Seleccionar marca *</option>
             {marcas.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
