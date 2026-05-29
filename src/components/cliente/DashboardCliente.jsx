@@ -19,25 +19,34 @@ export default function DashboardCliente() {
   const [vehiculos, setVehiculos] = useState([]);
   const [agendamientos, setAgendamientos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorCarga, setErrorCarga] = useState("");
 
   useEffect(() => {
     cargarDatos();
   }, []);
 
   const cargarDatos = async () => {
-    try {
-      const [vehiculosRes, agendamientosRes] = await Promise.all([
-        obtenerMisVehiculos(),
-        obtenerMisAgendamientos(),
-      ]);
+    setLoading(true);
+    setErrorCarga("");
 
-      setVehiculos(vehiculosRes.data || []);
-      setAgendamientos(agendamientosRes.data || []);
+    try {
+      const vehiculosRes = await obtenerMisVehiculos().catch(() => ({ data: [] }));
+      const agendamientosRes = await obtenerMisAgendamientos().catch(() => ({ data: [] }));
+
+      setVehiculos(Array.isArray(vehiculosRes.data) ? vehiculosRes.data : []);
+      setAgendamientos(Array.isArray(agendamientosRes.data) ? agendamientosRes.data : []);
     } catch (error) {
       console.error(error);
+      setErrorCarga("No se pudieron cargar algunos datos del dashboard.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const obtenerTexto = (valor, fallback = "Sin información") => {
+    if (!valor) return fallback;
+    if (typeof valor === "object") return valor.nombre || valor.descripcion || fallback;
+    return valor;
   };
 
   const proximoAgendamiento = agendamientos[0];
@@ -53,9 +62,26 @@ export default function DashboardCliente() {
     return (
       <div className="flex min-h-screen bg-gray-100">
         <SidebarCliente />
+
         <div className="flex-1">
           <TopbarCliente />
-          <div className="p-10 text-2xl font-bold">Cargando dashboard...</div>
+
+          <main className="p-8">
+            <div className="space-y-6 animate-pulse">
+              <div className="bg-[#16233b] rounded-2xl h-44 shadow-lg"></div>
+
+              <div className="grid grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="bg-white rounded-2xl shadow p-6 h-28">
+                    <div className="h-5 bg-gray-200 rounded w-24 mb-4"></div>
+                    <div className="h-7 bg-gray-200 rounded w-36"></div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-white rounded-2xl shadow h-64"></div>
+            </div>
+          </main>
         </div>
       </div>
     );
@@ -69,6 +95,12 @@ export default function DashboardCliente() {
         <TopbarCliente />
 
         <main className="p-8">
+          {errorCarga && (
+            <div className="mb-6 bg-orange-100 text-orange-700 px-5 py-4 rounded-xl font-bold">
+              {errorCarga}
+            </div>
+          )}
+
           <div className="bg-[#16233b] rounded-2xl text-white shadow-lg overflow-hidden">
             <div className="flex justify-between items-center">
               <div className="p-8 flex-1">
@@ -114,10 +146,8 @@ export default function DashboardCliente() {
                     Próxima cita
                   </p>
                   <h3 className="text-xl font-bold">
-                    {proximoAgendamiento
-                      ? new Date(
-                          proximoAgendamiento.fechaInicio
-                        ).toLocaleDateString("es-CL")
+                    {proximoAgendamiento?.fechaInicio
+                      ? new Date(proximoAgendamiento.fechaInicio).toLocaleDateString("es-CL")
                       : "Sin citas"}
                   </h3>
                 </div>
@@ -152,9 +182,7 @@ export default function DashboardCliente() {
               <div className="flex items-center gap-4">
                 <ClipboardList className="text-slate-700" size={26} />
                 <div>
-                  <p className="text-xs text-gray-500 uppercase">
-                    Servicios
-                  </p>
+                  <p className="text-xs text-gray-500 uppercase">Servicios</p>
                   <h3 className="text-xl font-bold">{agendamientos.length}</h3>
                 </div>
               </div>
@@ -170,27 +198,28 @@ export default function DashboardCliente() {
                 </h2>
 
                 <span className="font-bold">
-                  {otActiva.idAgendamiento?.slice(0, 8)}
+                  {otActiva.idAgendamiento?.slice?.(0, 8) || "OT"}
                 </span>
               </div>
 
               <div className="p-8">
                 <h3 className="text-3xl font-bold">
-                  {otActiva.nombreServicio}
+                  {obtenerTexto(otActiva.nombreServicio, "Servicio agendado")}
                 </h3>
 
                 <p className="text-gray-600 mt-2">
-                  {otActiva.marcaVehiculo} {otActiva.modeloVehiculo}
+                  {obtenerTexto(otActiva.marcaVehiculo, "")}{" "}
+                  {obtenerTexto(otActiva.modeloVehiculo, "")}
                 </p>
 
                 <p className="text-gray-500 mt-1">
-                  Patente: {otActiva.patenteVehiculo}
+                  Patente: {obtenerTexto(otActiva.patenteVehiculo, "Sin patente")}
                 </p>
 
                 <div className="mt-8 bg-gray-100 rounded-xl px-6 py-5">
                   Técnico asignado:
                   <span className="font-bold ml-2">
-                    {otActiva.nombreTecnico || "Aún no asignado"}
+                    {obtenerTexto(otActiva.nombreTecnico, "Aún no asignado")}
                   </span>
                 </div>
               </div>
@@ -202,23 +231,29 @@ export default function DashboardCliente() {
               Próximos agendamientos
             </h3>
 
-            <div className="space-y-4">
-              {agendamientos.slice(0, 3).map((ag) => (
-                <div
-                  key={ag.idAgendamiento}
-                  className="flex justify-between items-center"
-                >
-                  <div>
-                    <p className="font-bold">{ag.nombreServicio}</p>
-                    <p className="text-sm text-gray-500">
-                      {ag.patenteVehiculo}
-                    </p>
-                  </div>
+            {agendamientos.length === 0 ? (
+              <p className="text-gray-500">No tienes agendamientos registrados.</p>
+            ) : (
+              <div className="space-y-4">
+                {agendamientos.slice(0, 3).map((ag, index) => (
+                  <div
+                    key={ag.idAgendamiento || index}
+                    className="flex justify-between items-center"
+                  >
+                    <div>
+                      <p className="font-bold">
+                        {obtenerTexto(ag.nombreServicio, "Servicio")}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {obtenerTexto(ag.patenteVehiculo, "Sin patente")}
+                      </p>
+                    </div>
 
-                  <Bell className="text-orange-500" size={18} />
-                </div>
-              ))}
-            </div>
+                    <Bell className="text-orange-500" size={18} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </main>
       </div>

@@ -31,8 +31,12 @@ export default function Login() {
         usuarioId: data.usuarioId,
       })
 
-      if (data.rol === 'ADMIN' || data.rol === 'TECNICO') {
+      if (data.rol === 'ADMIN') {
         navigate('/admin')
+      } else if (data.rol === 'TECNICO') {
+        navigate('/tecnico/perfil')
+      } else if (data.rol === 'CLIENTE') {
+        navigate('/cliente/dashboard')
       } else {
         navigate('/')
       }

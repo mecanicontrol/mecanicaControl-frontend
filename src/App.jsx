@@ -10,7 +10,7 @@ import Seguimiento        from './pages/Publico/Seguimiento'
 import Servicios          from './pages/Publico/Servicios'
 import Tienda             from './pages/Publico/Tienda'
 import MisVehiculos       from './pages/Cliente/MisVehiculos'
-import DashboardCliente      from './pages/Cliente/Dashboard'
+import DashboardCliente from './components/cliente/DashboardCliente'
 import Historial             from './pages/Cliente/Historial'
 import AgendamientosCliente  from './pages/Cliente/Agendamientos'
 import PerfilCliente         from './pages/Cliente/Perfil'
@@ -29,7 +29,9 @@ import Catalogos          from './pages/Admin/Catalogos'
 import Usuarios           from './pages/Admin/Usuarios'
 import Configuracion      from './pages/Admin/Configuracion'
 import MiPerfil           from './pages/Admin/MiPerfil'
-
+import TecnicoDashboard from './pages/Tecnico/Dashboard'
+import OrdenesTecnico from './pages/Tecnico/Ordenes'
+import DetalleOrden from './pages/Tecnico/DetalleOrden'
 function App() {
   return (
     <AuthProvider>
@@ -46,6 +48,10 @@ function App() {
           <Route path="/tienda"      element={<Tienda />}      />
           <Route path="/perfil"      element={<Perfil />}       />
           <Route path="/tecnico/perfil" element={<TecnicoPerfil />} />
+          <Route path="/tecnico/dashboard" element={<TecnicoDashboard />} />
+          <Route path="/tecnico/ordenes" element={<OrdenesTecnico />} />
+          <Route path="/tecnico/ordenes/:codigo" element={<DetalleOrden />} />
+          
 
           {/* Cliente */}
           <Route
