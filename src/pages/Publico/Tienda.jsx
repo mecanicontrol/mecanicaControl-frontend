@@ -1,164 +1,146 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Navbar from "../../components/Navbar";
-import { ShoppingCart, Plus, Minus, Trash2 } from "lucide-react";
-import aceite from "../../assets/tienda/aceite.jpg";
-import frenos from "../../assets/tienda/frenos.jpg";
-import bateria from "../../assets/tienda/bateria.jpg";
-import filtroAire from "../../assets/tienda/filtro-aire.jpg";
-import herramientas from "../../assets/tienda/herramientas.jpg";
-import shampoo from "../../assets/tienda/shampoo.jpg";
-import plumillas from "../../assets/tienda/plumillas.jpg";
-import refrigerante from "../../assets/tienda/refrigerante.jpg";
-import filtroAceite from "../../assets/tienda/filtro-aceite.jpg";
+import { ShoppingCart, Plus, Minus, Trash2, Package, Search, Tag } from "lucide-react";
+import api from "../../api/axiosInstance";
+import imgAceite       from "../../assets/tienda/aceite.jpg";
+import imgFrenos       from "../../assets/tienda/frenos.jpg";
+import imgBateria      from "../../assets/tienda/bateria.jpg";
+import imgFiltroAire   from "../../assets/tienda/filtro-aire.jpg";
+import imgFiltroAceite from "../../assets/tienda/filtro-aceite.jpg";
+import imgHerramientas from "../../assets/tienda/herramientas.jpg";
+import imgShampoo      from "../../assets/tienda/shampoo.jpg";
+import imgRefrigerante from "../../assets/tienda/refrigerante.jpg";
+import imgPlumillas    from "../../assets/tienda/plumillas.jpg";
+
+const IMAGEN_POR_CATEGORIA = {
+  "aceites":       imgAceite,
+  "lubricantes":   imgAceite,
+  "refrigeración": imgRefrigerante,
+  "refrigerantes": imgRefrigerante,
+  "frenos":        imgFrenos,
+  "baterias":      imgBateria,
+  "baterías":      imgBateria,
+  "eléctrico":     imgBateria,
+  "electrico":     imgBateria,
+  "filtros":       imgFiltroAire,
+  "limpieza":      imgShampoo,
+  "accesorios":    imgPlumillas,
+  "herramientas":  imgHerramientas,
+  "neumaticos":    imgFrenos,
+  "neumáticos":    imgFrenos,
+  "encendido":     imgFiltroAceite,
+  "correas":       imgFiltroAceite,
+  "suspensión":    imgFrenos,
+  "suspension":    imgFrenos,
+  "escape":        imgFrenos,
+  "embrague":      imgFrenos,
+  "consumibles":   imgAceite,
+};
+
+const IMAGEN_DEFECTO = imgHerramientas;
+
+function imagenParaCategoria(categoria) {
+  if (!categoria) return IMAGEN_DEFECTO;
+  const key = categoria.toLowerCase().trim();
+  return IMAGEN_POR_CATEGORIA[key] ?? IMAGEN_DEFECTO;
+}
+
+function formatCLP(valor) {
+  const num = typeof valor === "number" ? valor : parseFloat(valor ?? 0);
+  return num.toLocaleString("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
+}
+
+function SkeletonCard() {
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden shadow animate-pulse">
+      <div className="w-full h-48 bg-gray-200" />
+      <div className="p-5 space-y-3">
+        <div className="h-5 bg-gray-200 rounded w-1/3" />
+        <div className="h-6 bg-gray-200 rounded w-3/4" />
+        <div className="h-4 bg-gray-100 rounded w-full" />
+        <div className="h-8 bg-gray-200 rounded w-1/2" />
+        <div className="h-10 bg-gray-200 rounded-lg w-full" />
+      </div>
+    </div>
+  );
+}
+
 export default function Tienda() {
   const [categoriaActiva, setCategoriaActiva] = useState("TODOS");
   const [busqueda, setBusqueda] = useState("");
-  const [carrito, setCarrito] = useState([]);
+  const [carrito, setCarrito]   = useState([]);
+  const [productos, setProductos]   = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [cargando, setCargando]     = useState(true);
+  const [error, setError]           = useState(null);
 
-  const productos = [
-  {
-    id: 1,
-    categoria: "ACEITES",
-    nombre: "Aceite Mobil 1 5W-30",
-    descripcion: "Aceite sintético premium para alto rendimiento.",
-    precio: 24990,
-    imagen: aceite,
-  },
-  {
-    id: 2,
-    categoria: "FRENOS",
-    nombre: "Pastillas de Freno Brembo",
-    descripcion: "Pastillas delanteras de alta seguridad.",
-    precio: 89990,
-    imagen: frenos,
-  },
-  {
-    id: 3,
-    categoria: "BATERÍAS",
-    nombre: "Batería Bosch 60Ah",
-    descripcion: "Batería automotriz de larga duración.",
-    precio: 129990,
-    imagen: bateria,
-  },
-  {
-    id: 4,
-    categoria: "FILTROS",
-    nombre: "Filtro de Aire K&N",
-    descripcion: "Mejora el flujo de aire del motor.",
-    precio: 34990,
-    imagen: filtroAire,
-  },
-  {
-    id: 5,
-    categoria: "ACCESORIOS",
-    nombre: "Kit Herramientas Auto",
-    descripcion: "Set básico para mantención y emergencias.",
-    precio: 45990,
-    imagen: herramientas,
-  },
-  {
-    id: 6,
-    categoria: "LIMPIEZA",
-    nombre: "Shampoo Automotriz Mothers",
-    descripcion: "Limpieza premium con brillo protector.",
-    precio: 12990,
-    imagen: shampoo,
-  },
-  {
-    id: 7,
-    categoria: "ACCESORIOS",
-    nombre: "Limpiaparabrisas Bosch",
-    descripcion: "Plumillas resistentes para lluvia intensa.",
-    precio: 19990,
-    imagen: plumillas,
-  },
-  {
-    id: 8,
-    categoria: "ACEITES",
-    nombre: "Refrigerante Motor Prestone",
-    descripcion: "Protección térmica y anticorrosiva.",
-    precio: 15990,
-    imagen: refrigerante,
-  },
-  {
-    id: 9,
-    categoria: "FILTROS",
-    nombre: "Filtro de Aceite Bosch",
-    descripcion: "Filtro de aceite de alta eficiencia.",
-    precio: 9990,
-    imagen: filtroAceite,
-  },
-];
+  const cargarDatos = useCallback(async () => {
+    setCargando(true);
+    setError(null);
+    try {
+      const [prodRes, catRes] = await Promise.all([
+        api.get("/api/tienda/productos"),
+        api.get("/api/tienda/categorias"),
+      ]);
+      setProductos(prodRes.data);
+      setCategorias(["TODOS", ...catRes.data]);
+    } catch {
+      setError("No se pudo cargar el catálogo. Intenta más tarde.");
+    } finally {
+      setCargando(false);
+    }
+  }, []);
 
-  const categorias = [
-    "TODOS",
-    "ACEITES",
-    "FRENOS",
-    "BATERÍAS",
-    "FILTROS",
-    "ACCESORIOS",
-    "LIMPIEZA",
-  ];
+  useEffect(() => { cargarDatos(); }, [cargarDatos]);
 
-  const productosFiltrados = productos.filter((producto) => {
+  const productosFiltrados = productos.filter((p) => {
     const coincideCategoria =
-      categoriaActiva === "TODOS" || producto.categoria === categoriaActiva;
-
-    const coincideBusqueda =
-      producto.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      producto.descripcion.toLowerCase().includes(busqueda.toLowerCase()) ||
-      producto.categoria.toLowerCase().includes(busqueda.toLowerCase());
-
+      categoriaActiva === "TODOS" || p.categoria === categoriaActiva;
+    const q = busqueda.toLowerCase();
+    const coincideBusqueda = !busqueda ||
+      p.nombre.toLowerCase().includes(q) ||
+      (p.descripcion && p.descripcion.toLowerCase().includes(q)) ||
+      p.categoria.toLowerCase().includes(q) ||
+      (p.marca && p.marca.toLowerCase().includes(q));
     return coincideCategoria && coincideBusqueda;
   });
 
   const agregarAlCarrito = (producto) => {
-    const existe = carrito.find((item) => item.id === producto.id);
-
-    if (existe) {
-      setCarrito(
-        carrito.map((item) =>
-          item.id === producto.id
-            ? { ...item, cantidad: item.cantidad + 1 }
-            : item
-        )
-      );
-    } else {
-      setCarrito([...carrito, { ...producto, cantidad: 1 }]);
-    }
+    setCarrito((prev) => {
+      const existe = prev.find((i) => i.id === producto.id);
+      if (existe) {
+        if (existe.cantidad >= producto.stock) return prev;
+        return prev.map((i) => i.id === producto.id ? { ...i, cantidad: i.cantidad + 1 } : i);
+      }
+      return [...prev, { ...producto, cantidad: 1 }];
+    });
   };
 
   const aumentarCantidad = (id) => {
-    setCarrito(
-      carrito.map((item) =>
-        item.id === id ? { ...item, cantidad: item.cantidad + 1 } : item
-      )
-    );
+    setCarrito((prev) => prev.map((i) => {
+      if (i.id !== id) return i;
+      if (i.cantidad >= i.stock) return i;
+      return { ...i, cantidad: i.cantidad + 1 };
+    }));
   };
 
   const disminuirCantidad = (id) => {
-    setCarrito(
-      carrito
-        .map((item) =>
-          item.id === id ? { ...item, cantidad: item.cantidad - 1 } : item
-        )
-        .filter((item) => item.cantidad > 0)
+    setCarrito((prev) =>
+      prev.map((i) => i.id === id ? { ...i, cantidad: i.cantidad - 1 } : i)
+          .filter((i) => i.cantidad > 0)
     );
   };
 
-  const eliminarProducto = (id) => {
-    setCarrito(carrito.filter((item) => item.id !== id));
-  };
+  const eliminarProducto = (id) => setCarrito((prev) => prev.filter((i) => i.id !== id));
 
-  const total = carrito.reduce(
-    (acc, item) => acc + item.precio * item.cantidad,
-    0
-  );
+  const total = carrito.reduce((acc, i) => acc + parseFloat(i.precioVenta ?? 0) * i.cantidad, 0);
 
-  const botonFiltro = (categoria) =>
-    categoriaActiva === categoria
+  const btnFiltro = (cat) =>
+    categoriaActiva === cat
       ? "bg-orange-500 text-white px-5 py-2 rounded-lg text-sm font-semibold shadow"
       : "bg-white text-gray-800 px-5 py-2 rounded-lg text-sm font-semibold shadow hover:bg-orange-100 transition";
+
+  const enCarrito = (id) => carrito.find((i) => i.id === id);
 
   return (
     <>
@@ -168,164 +150,186 @@ export default function Tienda() {
 
         {/* HERO */}
         <section className="relative h-[260px] flex items-center justify-center text-white overflow-hidden">
-
           <img
             src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1600&auto=format&fit=crop"
             alt="Tienda"
             className="absolute inset-0 w-full h-full object-cover"
           />
-
-          <div className="absolute inset-0 bg-blue-950/85"></div>
-
+          <div className="absolute inset-0 bg-blue-950/85" />
           <div className="relative z-10 text-center">
-
             <p className="text-xs uppercase tracking-[3px] mb-3">
-              <span className="text-orange-500 font-semibold">
-                Inicio
-              </span>
-
-              <span className="text-gray-300 mx-2">
-                ›
-              </span>
-
-              <span className="text-white">
-                Tienda
-              </span>
+              <span className="text-orange-500 font-semibold">Inicio</span>
+              <span className="text-gray-300 mx-2">›</span>
+              <span className="text-white">Tienda</span>
             </p>
-
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight antialiased">
               TIENDA MECÁNICAHUB
             </h1>
-
           </div>
-
         </section>
 
         {/* FILTROS */}
         <section className="max-w-7xl mx-auto px-6 py-8">
-
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
             <div className="flex flex-wrap gap-3">
-              {categorias.map((categoria) => (
-                <button
-                  key={categoria}
-                  onClick={() => setCategoriaActiva(categoria)}
-                  className={botonFiltro(categoria)}
-                >
-                  {categoria}
-                </button>
-              ))}
+              {cargando
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="h-9 w-24 bg-gray-200 rounded-lg animate-pulse" />
+                  ))
+                : categorias.map((cat) => (
+                    <button key={cat} onClick={() => setCategoriaActiva(cat)} className={btnFiltro(cat)}>
+                      {cat}
+                    </button>
+                  ))}
             </div>
 
-            {/* BUSCADOR */}
             <div className="relative w-full lg:w-[320px]">
-
               <input
                 type="text"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                placeholder="Buscar productos..."
-                className="w-full bg-gray-100 border border-gray-200 rounded-md py-3 pl-10 pr-4 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Buscar productos, marcas..."
+                className="w-full bg-white border border-gray-200 rounded-md py-3 pl-10 pr-4 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-orange-500"
               />
-
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
             </div>
 
           </div>
-
         </section>
 
         {/* CONTENIDO */}
         <section className="max-w-7xl mx-auto px-6 pb-16">
-
           <div className="grid lg:grid-cols-4 gap-8">
 
             {/* PRODUCTOS */}
             <div className="lg:col-span-3">
 
-              <div className="grid md:grid-cols-3 gap-8">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-6 text-center">
+                  <p>{error}</p>
+                  <button onClick={cargarDatos} className="mt-3 text-sm underline">Reintentar</button>
+                </div>
+              )}
 
-                {productosFiltrados.map((producto) => (
-                  <div
-                    key={producto.id}
-                    className="bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition flex flex-col"
-                  >
+              {cargando && (
+                <div className="grid md:grid-cols-3 gap-8">
+                  {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+                </div>
+              )}
 
-                    <img
-                      src={producto.imagen}
-                      alt={producto.nombre}
-                      className="w-full h-48 object-cover"
-                    />
+              {!cargando && !error && productosFiltrados.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+                  <Package size={48} className="mb-4 opacity-30" />
+                  <p className="text-lg font-semibold">Sin productos disponibles</p>
+                  <p className="text-sm mt-1">
+                    {busqueda || categoriaActiva !== "TODOS"
+                      ? "Prueba con otro filtro o búsqueda."
+                      : "El catálogo está vacío por el momento."}
+                  </p>
+                </div>
+              )}
 
-                    <div className="p-5 flex flex-col flex-1">
-
-                      <span className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded w-fit">
-                        {producto.categoria}
-                      </span>
-
-                      <h3 className="text-lg font-black mt-4 mb-2 leading-tight antialiased">
-                        {producto.nombre}
-                      </h3>
-
-                      <p className="text-gray-500 text-sm leading-6 mb-4">
-                        {producto.descripcion}
-                      </p>
-
-                      <p className="text-2xl font-black text-blue-950 mb-5 mt-auto">
-                        ${producto.precio.toLocaleString("es-CL")}
-                      </p>
-
-                      <button
-                        onClick={() => agregarAlCarrito(producto)}
-                        className="w-full bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 transition flex items-center justify-center gap-2"
+              {!cargando && !error && productosFiltrados.length > 0 && (
+                <div className="grid md:grid-cols-3 gap-8">
+                  {productosFiltrados.map((producto) => {
+                    const itemCarrito = enCarrito(producto.id);
+                    const sinStock = producto.stock <= 0;
+                    return (
+                      <div
+                        key={producto.id}
+                        className="bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition flex flex-col"
                       >
-                        <ShoppingCart size={18} />
-                        Agregar
-                      </button>
+                        <div className="relative">
+                          <img
+                            src={imagenParaCategoria(producto.categoria)}
+                            alt={producto.nombre}
+                            className="w-full h-48 object-cover"
+                          />
+                          {producto.marca && (
+                            <span className="absolute top-3 right-3 bg-white/90 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full shadow">
+                              {producto.marca}
+                            </span>
+                          )}
+                        </div>
 
-                    </div>
-                  </div>
-                ))}
+                        <div className="p-5 flex flex-col flex-1">
+                          <span className="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded w-fit flex items-center gap-1">
+                            <Tag size={10} />
+                            {producto.categoria}
+                          </span>
 
-              </div>
+                          <h3 className="text-lg font-black mt-4 mb-1 leading-tight antialiased">
+                            {producto.nombre}
+                          </h3>
 
+                          {producto.sku && (
+                            <p className="text-xs text-gray-400 mb-2 font-mono">SKU: {producto.sku}</p>
+                          )}
+
+                          <p className="text-gray-500 text-sm leading-6 mb-4 flex-1">
+                            {producto.descripcion || "Sin descripción disponible."}
+                          </p>
+
+                          <p className="text-2xl font-black text-blue-950 mb-5">
+                            {formatCLP(producto.precioVenta)}
+                          </p>
+
+                          {sinStock ? (
+                            <button disabled className="w-full bg-gray-200 text-gray-400 py-2 rounded-lg font-semibold cursor-not-allowed">
+                              Sin stock
+                            </button>
+                          ) : itemCarrito ? (
+                            <div className="flex items-center justify-between border border-orange-300 rounded-lg px-3 py-2">
+                              <button
+                                onClick={() => disminuirCantidad(producto.id)}
+                                className="w-7 h-7 rounded bg-orange-100 flex items-center justify-center hover:bg-orange-200"
+                              >
+                                <Minus size={14} />
+                              </button>
+                              <span className="font-bold text-blue-950">{itemCarrito.cantidad}</span>
+                              <button
+                                onClick={() => aumentarCantidad(producto.id)}
+                                disabled={itemCarrito.cantidad >= producto.stock}
+                                className="w-7 h-7 rounded bg-orange-100 flex items-center justify-center hover:bg-orange-200 disabled:opacity-40"
+                              >
+                                <Plus size={14} />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => agregarAlCarrito(producto)}
+                              className="w-full bg-orange-500 text-white py-2 rounded-lg font-semibold hover:bg-orange-600 transition flex items-center justify-center gap-2"
+                            >
+                              <ShoppingCart size={18} />
+                              Agregar
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* CARRITO */}
             <aside className="lg:col-span-1">
-
               <div className="bg-white rounded-2xl shadow p-6 sticky top-6">
 
                 <div className="flex items-center gap-2 mb-5">
-
-                  <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center text-white">
+                  <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center text-white relative">
                     <ShoppingCart size={22} />
+                    {carrito.length > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-blue-950 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                        {carrito.reduce((a, i) => a + i.cantidad, 0)}
+                      </span>
+                    )}
                   </div>
-
                   <div>
-                    <h2 className="font-black text-blue-950">
-                      Carrito
-                    </h2>
-                    <p className="text-xs text-gray-400">
-                      Resumen de compra
-                    </p>
+                    <h2 className="font-black text-blue-950">Carrito</h2>
+                    <p className="text-xs text-gray-400">Resumen de compra</p>
                   </div>
-
                 </div>
 
                 {carrito.length === 0 ? (
@@ -333,83 +337,56 @@ export default function Tienda() {
                     Aún no agregas productos.
                   </p>
                 ) : (
-                  <div className="space-y-4">
-
+                  <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
                     {carrito.map((item) => (
-                      <div
-                        key={item.id}
-                        className="border border-gray-200 rounded-lg p-3"
-                      >
-
+                      <div key={item.id} className="border border-gray-200 rounded-lg p-3">
                         <div className="flex justify-between gap-2">
-
-                          <div>
-                            <p className="text-sm font-bold text-gray-800">
-                              {item.nombre}
-                            </p>
-
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-gray-800 truncate">{item.nombre}</p>
                             <p className="text-sm font-bold text-orange-500 mt-1">
-                              ${item.precio.toLocaleString("es-CL")}
+                              {formatCLP(item.precioVenta)}
                             </p>
                           </div>
-
-                          <button
-                            onClick={() => eliminarProducto(item.id)}
-                            className="text-gray-400 hover:text-red-500"
-                          >
+                          <button onClick={() => eliminarProducto(item.id)} className="text-gray-400 hover:text-red-500 flex-shrink-0">
                             <Trash2 size={16} />
                           </button>
-
                         </div>
 
                         <div className="flex items-center justify-between mt-3">
-
                           <div className="flex items-center gap-2">
-
                             <button
                               onClick={() => disminuirCantidad(item.id)}
                               className="w-7 h-7 rounded bg-gray-100 flex items-center justify-center hover:bg-gray-200"
                             >
                               <Minus size={14} />
                             </button>
-
-                            <span className="text-sm font-bold">
-                              {item.cantidad}
-                            </span>
-
+                            <span className="text-sm font-bold">{item.cantidad}</span>
                             <button
                               onClick={() => aumentarCantidad(item.id)}
-                              className="w-7 h-7 rounded bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                              disabled={item.cantidad >= item.stock}
+                              className="w-7 h-7 rounded bg-gray-100 flex items-center justify-center hover:bg-gray-200 disabled:opacity-40"
                             >
                               <Plus size={14} />
                             </button>
-
                           </div>
-
                           <p className="text-sm font-black text-blue-950">
-                            ${(item.precio * item.cantidad).toLocaleString("es-CL")}
+                            {formatCLP(parseFloat(item.precioVenta ?? 0) * item.cantidad)}
                           </p>
-
                         </div>
-
                       </div>
                     ))}
-
                   </div>
                 )}
 
                 <div className="border-t border-gray-200 mt-6 pt-5">
-
                   <div className="flex justify-between text-sm text-gray-500 mb-2">
                     <span>Subtotal</span>
-                    <span>${total.toLocaleString("es-CL")}</span>
+                    <span>{formatCLP(total)}</span>
                   </div>
-
                   <div className="flex justify-between text-xl font-black text-blue-950 mb-5">
                     <span>Total</span>
-                    <span>${total.toLocaleString("es-CL")}</span>
+                    <span>{formatCLP(total)}</span>
                   </div>
-
                   <button
                     disabled={carrito.length === 0}
                     className={`w-full py-3 rounded-lg font-bold transition ${
@@ -420,15 +397,12 @@ export default function Tienda() {
                   >
                     Comprar
                   </button>
-
                 </div>
 
               </div>
-
             </aside>
 
           </div>
-
         </section>
 
       </div>

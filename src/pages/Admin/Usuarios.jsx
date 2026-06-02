@@ -272,11 +272,9 @@ export default function Usuarios() {
                   <label className="text-xs text-gray-400 font-semibold block mb-1">Rol</label>
                   <select value={form.rolNombre} onChange={(e) => setForm({ ...form, rolNombre: e.target.value })}
                     className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500"
-                    disabled={modal === 'editar'}
                   >
                     {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
-                  {modal === 'editar' && <p className="text-xs text-gray-600 mt-1">El rol no se puede cambiar una vez creado</p>}
                 </div>
                 {modal === 'crear' && (
                   <p className="text-xs text-gray-500 bg-gray-900/50 rounded-lg px-3 py-2">

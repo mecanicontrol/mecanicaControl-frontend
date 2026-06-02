@@ -95,12 +95,13 @@ export default function TecnicoDashboard() {
   const cargarDashboard = async () => {
     try {
       const { data } = await obtenerDashboardTecnico();
-
       setDashboard((prev) => ({
         ...prev,
-        tiempoPromedio: data.tiempoPromedio
-          ? `${data.tiempoPromedio}m`
-          : prev.tiempoPromedio,
+        otActivas:      data.otActivas     ?? prev.otActivas,
+        tiempoPromedio: data.tiempoPromedio ? `${data.tiempoPromedio}m` : prev.tiempoPromedio,
+        rendimiento:    data.otCompletadas != null && (data.otActivas + data.otCompletadas) > 0
+                          ? Math.round((data.otCompletadas / (data.otActivas + data.otCompletadas)) * 100) + '%'
+                          : prev.rendimiento,
       }));
     } catch (error) {
       console.error("Error cargando dashboard:", error);
