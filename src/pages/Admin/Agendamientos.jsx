@@ -3,9 +3,10 @@ import AdminLayout from '../../components/admin/AdminLayout'
 import * as svc from '../../services/adminAgendamientoService'
 import { obtenerServicios } from '../../services/adminCatalogosService'
 import { obtenerUsuarios } from '../../services/adminUsuariosService'
+import api from '../../api/axiosInstance'
 import {
   Search, Filter, Eye, CheckCircle, XCircle, Plus, Calendar,
-  AlertTriangle, Info
+  AlertTriangle, Info, Car, Wrench
 } from 'lucide-react'
 
 const ESTADOS = ['PENDIENTE', 'CONFIRMADO', 'CANCELADO', 'COMPLETADO']
@@ -351,22 +352,31 @@ export default function Agendamientos() {
 // ─── Modal Confirmar con selector de técnico ───
 function ModalConfirmar({ agendamiento, accionando, onClose, onConfirmar, fmt }) {
   const [tecnicos, setTecnicos] = useState([])
+  const [cargaTecnicos, setCargaTecnicos] = useState([])
   const [tecnicoId, setTecnicoId] = useState('')
   const [cargandoTec, setCargandoTec] = useState(true)
 
   useEffect(() => {
-    obtenerUsuarios()
-      .then(({ data }) => {
-        const lista = Array.isArray(data) ? data : []
+    Promise.all([
+      obtenerUsuarios(),
+      api.get('/api/admin/tecnicos/carga').catch(() => ({ data: [] })),
+    ])
+      .then(([{ data: usuarios }, { data: carga }]) => {
+        const lista = Array.isArray(usuarios) ? usuarios : []
         setTecnicos(lista.filter(u => u.rol === 'TECNICO'))
+        setCargaTecnicos(Array.isArray(carga) ? carga : [])
       })
       .catch(() => {})
       .finally(() => setCargandoTec(false))
   }, [])
 
+  const tecnicoSeleccionado = tecnicoId
+    ? cargaTecnicos.find(t => t.tecnicoId === tecnicoId)
+    : null
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-md mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-lg mx-4 p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
             <CheckCircle size={20} className="text-blue-400" />
@@ -383,7 +393,7 @@ function ModalConfirmar({ agendamiento, accionando, onClose, onConfirmar, fmt })
           <div className="flex justify-between"><span className="text-gray-400">Fecha</span><span className="text-white">{fmt(agendamiento.fechaInicio)}</span></div>
         </div>
 
-        <div className="mb-4">
+        <div className="mb-3">
           <label className="text-xs text-gray-400 font-semibold block mb-1.5 uppercase tracking-wider">Técnico asignado *</label>
           {cargandoTec ? (
             <div className="h-10 bg-gray-700 rounded-lg animate-pulse" />
@@ -396,12 +406,43 @@ function ModalConfirmar({ agendamiento, accionando, onClose, onConfirmar, fmt })
               className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-orange-500"
             >
               <option value="">Seleccionar técnico...</option>
-              {tecnicos.map(t => (
-                <option key={t.id} value={t.id}>{t.nombre} {t.apellido}</option>
-              ))}
+              {tecnicos.map(t => {
+                const carga = cargaTecnicos.find(c => c.tecnicoId === t.id)
+                const ots = carga ? carga.otActivas : 0
+                return (
+                  <option key={t.id} value={t.id}>
+                    {t.nombre} {t.apellido} — {ots} vehículo{ots !== 1 ? 's' : ''} en taller
+                  </option>
+                )
+              })}
             </select>
           )}
         </div>
+
+        {/* Carga actual del técnico seleccionado */}
+        {tecnicoSeleccionado && (
+          <div className="mb-4 bg-gray-900/60 border border-gray-700 rounded-xl p-3">
+            <p className="text-xs font-black uppercase text-gray-400 tracking-wider mb-2 flex items-center gap-1.5">
+              <Car size={11} /> Vehículos actuales en taller
+            </p>
+            {tecnicoSeleccionado.otActivas === 0 ? (
+              <p className="text-xs text-gray-500">Sin vehículos asignados actualmente.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {tecnicoSeleccionado.vehiculos.map((v, i) => (
+                  <div key={i} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <Wrench size={11} className="text-orange-400 flex-shrink-0" />
+                      <span className="text-gray-300 font-bold">{v.patente}</span>
+                      <span className="text-gray-500">{v.servicio}</span>
+                    </div>
+                    <span className="text-gray-500 font-bold">{v.codigo}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="flex items-center gap-2 text-xs text-blue-400/80 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2 mb-4">
           <Info size={13} /> La confirmación genera automáticamente la Orden de Trabajo.

@@ -16,21 +16,21 @@ export default function TopbarTecnico() {
     foto || "https://api.dicebear.com/7.x/notionists/svg?seed=Tecnico";
 
   return (
-    <header className="h-20 bg-white border-b flex items-center justify-between px-8">
-      <h2 className="text-4xl font-black text-orange-500">
-        OPERATIONAL TERMINAL
+    <header className="h-16 bg-white border-b flex items-center justify-between px-6 flex-shrink-0">
+      <h2 className="text-sm font-bold text-gray-500 uppercase tracking-widest">
+        Portal Técnico
       </h2>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <input
-          placeholder="Search..."
-          className="bg-gray-100 px-4 py-2 rounded-xl outline-none"
+          placeholder="Buscar..."
+          className="bg-gray-100 px-3 py-1.5 text-sm rounded-lg outline-none focus:ring-2 focus:ring-orange-300 w-48"
         />
 
         <img
           src={fotoPerfil}
           alt="Perfil técnico"
-          className="w-12 h-12 rounded-full object-cover border-2 border-orange-500"
+          className="w-8 h-8 rounded-full object-cover border-2 border-orange-500"
         />
       </div>
     </header>

@@ -5,16 +5,20 @@ import Home               from './pages/Home'
 import Cotizador          from './pages/Publico/Cotizador'
 import Login              from './pages/Publico/Login'
 import Register           from './pages/Publico/Register'
+import VerificarEmail     from './pages/Publico/VerificarEmail'
 import Agendamiento       from './pages/Publico/Agendamiento'
 import Seguimiento        from './pages/Publico/Seguimiento'
 import Servicios          from './pages/Publico/Servicios'
 import Tienda             from './pages/Publico/Tienda'
+import Checkout          from './pages/Publico/Checkout'
+import ConfirmacionCompra from './pages/Publico/ConfirmacionCompra'
 import MisVehiculos       from './pages/Cliente/MisVehiculos'
 import DashboardCliente from './components/cliente/DashboardCliente'
 import Historial             from './pages/Cliente/Historial'
 import AgendamientosCliente  from './pages/Cliente/Agendamientos'
 import PerfilCliente         from './pages/Cliente/Perfil'
 import DetalleVehiculo       from './pages/Cliente/DetalleVehiculo'
+import SeguimientoDetalle    from './pages/Cliente/SeguimientoDetalle'
 import Perfil             from './pages/Publico/Perfil'
 import TecnicoPerfil      from './pages/Tecnico/Perfil'
 
@@ -29,6 +33,11 @@ import Catalogos          from './pages/Admin/Catalogos'
 import Usuarios           from './pages/Admin/Usuarios'
 import Configuracion      from './pages/Admin/Configuracion'
 import MiPerfil           from './pages/Admin/MiPerfil'
+import MiTienda           from './pages/Admin/MiTienda'
+import VerTienda          from './pages/Admin/VerTienda'
+import ControlCalidad     from './pages/Admin/ControlCalidad'
+import Propuestas         from './pages/Admin/Propuestas'
+import ConfirmarDiagnostico from './pages/Publico/ConfirmarDiagnostico'
 import TecnicoDashboard from './pages/Tecnico/Dashboard'
 import OrdenesTecnico from './pages/Tecnico/Ordenes'
 import DetalleOrden from './pages/Tecnico/DetalleOrden'
@@ -41,12 +50,16 @@ function App() {
           {/* Rutas públicas */}
           <Route path="/"            element={<Home />}         />
           <Route path="/cotizador"   element={<Cotizador />}    />
+          <Route path="/confirmar-diagnostico/:token" element={<ConfirmarDiagnostico />} />
           <Route path="/login"       element={<Login />}        />
-          <Route path="/register"    element={<Register />}     />
+          <Route path="/register"        element={<Register />}      />
+          <Route path="/verificar-email" element={<VerificarEmail />} />
           <Route path="/agendar"      element={<Agendamiento />} />
           <Route path="/seguimiento"  element={<Seguimiento />}  />
           <Route path="/servicios"    element={<Servicios />}   />
-          <Route path="/tienda"      element={<Tienda />}      />
+          <Route path="/tienda"               element={<Tienda />}            />
+          <Route path="/tienda/checkout"    element={<Checkout />}          />
+          <Route path="/tienda/confirmacion" element={<ConfirmacionCompra />} />
           <Route path="/perfil"      element={<Perfil />}       />
           <Route path="/tecnico/perfil" element={<RutaProtegida rolesPermitidos={['TECNICO']}><TecnicoPerfil /></RutaProtegida>} />
           <Route path="/tecnico/dashboard" element={<RutaProtegida rolesPermitidos={['TECNICO']}><TecnicoDashboard /></RutaProtegida>} />
@@ -101,6 +114,14 @@ function App() {
             element={
               <RutaProtegida rolesPermitidos={['CLIENTE', 'ADMIN']}>
                 <DetalleVehiculo />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/cliente/seguimiento/:agendamientoId"
+            element={
+              <RutaProtegida rolesPermitidos={['CLIENTE', 'ADMIN']}>
+                <SeguimientoDetalle />
               </RutaProtegida>
             }
           />
@@ -200,6 +221,42 @@ function App() {
             element={
               <RutaProtegida rolesPermitidos={['ADMIN']}>
                 <MiPerfil />
+              </RutaProtegida>
+            }
+          />
+
+          <Route
+            path="/admin/mi-tienda"
+            element={
+              <RutaProtegida rolesPermitidos={['ADMIN']}>
+                <MiTienda />
+              </RutaProtegida>
+            }
+          />
+
+          <Route
+            path="/admin/ver-tienda"
+            element={
+              <RutaProtegida rolesPermitidos={['ADMIN']}>
+                <VerTienda />
+              </RutaProtegida>
+            }
+          />
+
+          <Route
+            path="/admin/control-calidad"
+            element={
+              <RutaProtegida rolesPermitidos={['ADMIN']}>
+                <ControlCalidad />
+              </RutaProtegida>
+            }
+          />
+
+          <Route
+            path="/admin/propuestas"
+            element={
+              <RutaProtegida rolesPermitidos={['ADMIN']}>
+                <Propuestas />
               </RutaProtegida>
             }
           />

@@ -1,15 +1,15 @@
 import { useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Mail } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import api from '../../api/axiosInstance'
-import { useAuth } from '../../context/AuthContext'
 
 export default function TabCrearCuenta({ onContinuar, vehiculo }) {
-  const { login: loginCtx } = useAuth()
   const [form, setForm]             = useState({ nombre: '', apellido: '', email: '', telefono: '', password: '', repetir: '' })
   const [verPassword, setVerPassword] = useState(false)
   const [verRepetir, setVerRepetir]   = useState(false)
   const [cargando, setCargando]       = useState(false)
   const [error, setError]             = useState('')
+  const [enviado, setEnviado]         = useState(false)
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -37,14 +37,32 @@ export default function TabCrearCuenta({ onContinuar, vehiculo }) {
         anio:        vehiculo?.anio     ? Number(vehiculo.anio) : null,
         kilometraje: vehiculo?.kilometraje ? Number(vehiculo.kilometraje) : null,
       }
-      const { data } = await api.post('/api/auth/register-con-vehiculo', payload)
-      loginCtx(data.token, { rol: data.rol, nombre: data.nombre, usuarioId: data.usuarioId })
-      onContinuar()
+      await api.post('/api/auth/register-con-vehiculo', payload)
+      setEnviado(true)
     } catch (e) {
       setError(e.response?.data?.message ?? e.response?.data ?? 'Error al crear la cuenta. Intenta de nuevo.')
     } finally {
       setCargando(false)
     }
+  }
+
+  if (enviado) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center">
+        <Mail size={48} className="mx-auto text-orange-400 mb-4" />
+        <h3 className="text-xl font-black text-gray-800 mb-2">¡Casi listo!</h3>
+        <p className="text-gray-500 text-sm mb-1">
+          Te enviamos un enlace de verificación a <strong>{form.email}</strong>.
+        </p>
+        <p className="text-gray-400 text-xs mb-6">Verifica tu correo y luego inicia sesión para ver tu agendamiento.</p>
+        <Link
+          to="/login"
+          className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-black py-3 px-8 rounded-xl uppercase text-sm tracking-widest transition-colors"
+        >
+          Ir a iniciar sesión
+        </Link>
+      </div>
+    )
   }
 
   return (

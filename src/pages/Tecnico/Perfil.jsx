@@ -4,7 +4,7 @@ import PerfilTecnico from "../../components/Tecnico/PerfilTecnico";
 
 export default function TecnicoPerfil() {
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-950">
       <SidebarTecnico />
 
       <div className="flex-1">

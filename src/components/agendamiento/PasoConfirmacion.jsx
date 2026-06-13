@@ -97,15 +97,13 @@ export default function PasoConfirmacion({ vehiculo, servicios, fecha, hora, onV
         }
       }
 
-      for (const servicio of servicios) {
-        await crearAgendamiento({
-          idVehiculo:  idVehiculoFinal,
-          idServicio:  servicio.id,
-          fechaInicio: hora,
-          notaCliente: null,
-          patente:     null,
-        })
-      }
+      await crearAgendamiento({
+        idVehiculo:   idVehiculoFinal,
+        idServicios:  servicios.map(s => s.id),
+        fechaInicio:  hora,
+        notaCliente:  null,
+        patente:      null,
+      })
       setConfirmado(true)
     } catch (e) {
       setError(e.response?.data?.message ?? e.response?.data ?? 'Error al confirmar. Intenta de nuevo.')

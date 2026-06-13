@@ -9,9 +9,10 @@ import {
   Legend,
 } from 'chart.js'
 import { Bar, Doughnut } from 'react-chartjs-2'
-import { CalendarDays, Users, Wrench, Clock } from 'lucide-react'
+import { CalendarDays, Users, Wrench, Clock, Car } from 'lucide-react'
 import { obtenerDashboard } from '../../services/adminService'
 import AdminLayout from '../../components/admin/AdminLayout'
+import api from '../../api/axiosInstance'
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
@@ -59,12 +60,14 @@ export default function Dashboard() {
   const [datos, setDatos]   = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError]   = useState(null)
+  const [taller, setTaller] = useState(null)
 
   useEffect(() => {
     obtenerDashboard()
       .then(({ data }) => setDatos(data))
       .catch(() => setError('No se pudo cargar el dashboard.'))
       .finally(() => setCargando(false))
+    api.get('/api/taller/estado').then(({ data }) => setTaller(data)).catch(() => {})
   }, [])
 
   const barData = datos ? {
@@ -124,6 +127,35 @@ export default function Dashboard() {
 
         {error && (
           <div className="bg-red-900/30 border border-red-800 rounded-xl p-4 text-red-400 text-sm">{error}</div>
+        )}
+
+        {/* Capacidad del taller — siempre visible */}
+        {taller && (
+          <div className={`bg-gray-900 border rounded-2xl p-5 flex items-center gap-5 ${taller.tallerLleno ? 'border-red-500/50' : 'border-gray-800'}`}>
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${taller.tallerLleno ? 'bg-red-500/20 text-red-400' : 'bg-orange-500/10 text-orange-400'}`}>
+              <Car size={22} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">Vehículos en taller</p>
+                <span className={`text-xs font-black px-2 py-0.5 rounded-full ${taller.tallerLleno ? 'bg-red-500/20 text-red-400' : taller.disponibles <= 3 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-green-500/20 text-green-400'}`}>
+                  {taller.tallerLleno ? 'LLENO' : `${taller.disponibles} disponible${taller.disponibles !== 1 ? 's' : ''}`}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${taller.tallerLleno ? 'bg-red-500' : taller.disponibles <= 3 ? 'bg-yellow-500' : 'bg-orange-500'}`}
+                    style={{ width: `${Math.min(100, Math.round((taller.vehiculosEnTaller / taller.capacidadMaxima) * 100))}%` }}
+                  />
+                </div>
+                <span className="text-2xl font-black text-white flex-shrink-0">{taller.vehiculosEnTaller}<span className="text-gray-600 text-base font-bold">/{taller.capacidadMaxima}</span></span>
+              </div>
+              {taller.tallerLleno && taller.proximaDisponibilidad && (
+                <p className="text-xs text-gray-500 mt-1">Próxima disponibilidad estimada: <span className="text-orange-400 font-bold">{new Date(taller.proximaDisponibilidad + 'T00:00:00').toLocaleDateString('es-CL', { day: 'numeric', month: 'long' })}</span></p>
+              )}
+            </div>
+          </div>
         )}
 
         {datos && (

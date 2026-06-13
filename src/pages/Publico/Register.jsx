@@ -1,13 +1,12 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import Navbar       from '../../components/Navbar'
 import Footer       from '../../components/Footer'
 import InicioSesion from '../../components/login/InicioSesion'
 import { register } from '../../services/authService'
+import { Mail } from 'lucide-react'
 
 export default function Register() {
-  const navigate = useNavigate()
-
   const [email, setEmail]         = useState('')
   const [password, setPassword]   = useState('')
   const [nombre, setNombre]       = useState('')
@@ -17,6 +16,7 @@ export default function Register() {
   const [rut, setRut]             = useState('')
   const [error, setError]         = useState(null)
   const [cargando, setCargando]   = useState(false)
+  const [enviado, setEnviado]     = useState(false)
 
   const handleRegister = async (e) => {
     e?.preventDefault()
@@ -34,14 +34,37 @@ export default function Register() {
         rut,
         rolNombre: 'CLIENTE',
       })
-
-      alert('Usuario registrado exitosamente')
-      navigate('/login')
-    } catch {
-      setError('Error al registrar. Verifica tus datos e intenta nuevamente.')
+      setEnviado(true)
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Error al registrar. Verifica tus datos e intenta nuevamente.')
     } finally {
       setCargando(false)
     }
+  }
+
+  if (enviado) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gray-50">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center px-4 py-16">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-10 max-w-md w-full text-center">
+            <Mail size={52} className="mx-auto text-orange-400 mb-4" />
+            <h2 className="text-2xl font-black text-gray-800 mb-2">Revisa tu correo</h2>
+            <p className="text-gray-500 text-sm mb-2">
+              Te enviamos un enlace de verificación a <strong>{email}</strong>.
+            </p>
+            <p className="text-gray-400 text-xs mb-8">El enlace expira en 24 horas.</p>
+            <Link
+              to="/login"
+              className="inline-block text-orange-500 hover:text-orange-600 font-semibold text-sm underline"
+            >
+              Ir al inicio de sesión
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
   }
 
   return (

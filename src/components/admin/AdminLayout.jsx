@@ -4,21 +4,40 @@ import { useAuth } from '../../context/AuthContext'
 import {
   LayoutDashboard, CalendarDays, ClipboardList, Package,
   Users, Wrench, BarChart2, BookOpen, UserCog, Settings,
-  UserCircle, LogOut, Menu, X, ChevronRight
+  UserCircle, LogOut, Menu, X, ChevronRight, Store, Eye, ShieldCheck, Stethoscope
 } from 'lucide-react'
 
-const NAV_ITEMS = [
-  { to: '/admin',               icon: LayoutDashboard, label: 'Dashboard'        },
-  { to: '/admin/agendamientos', icon: CalendarDays,    label: 'Agendamientos'    },
-  { to: '/admin/ot',            icon: ClipboardList,   label: 'Órdenes de Trabajo' },
-  { to: '/admin/inventario',    icon: Package,         label: 'Inventario'       },
-  { to: '/admin/clientes',      icon: Users,           label: 'Clientes'         },
-  { to: '/admin/tecnicos',      icon: Wrench,          label: 'Técnicos'         },
-  { to: '/admin/reportes',      icon: BarChart2,       label: 'Reportes'         },
-  { to: '/admin/catalogos',     icon: BookOpen,        label: 'Catálogos'        },
-  { to: '/admin/usuarios',      icon: UserCog,         label: 'Usuarios'         },
-  { to: '/admin/configuracion', icon: Settings,        label: 'Configuración'    },
-  { to: '/admin/mi-perfil',     icon: UserCircle,      label: 'Mi Perfil'        },
+const NAV_GROUPS = [
+  {
+    label: null,
+    items: [
+      { to: '/admin',               icon: LayoutDashboard, label: 'Dashboard'          },
+      { to: '/admin/agendamientos', icon: CalendarDays,    label: 'Agendamientos'      },
+      { to: '/admin/ot',            icon: ClipboardList,   label: 'Órdenes de Trabajo' },
+      { to: '/admin/control-calidad', icon: ShieldCheck,    label: 'Control de Calidad' },
+      { to: '/admin/propuestas',      icon: Stethoscope,   label: 'Propuestas Diagnóst.' },
+      { to: '/admin/inventario',    icon: Package,         label: 'Inventario'         },
+      { to: '/admin/clientes',      icon: Users,           label: 'Clientes'           },
+      { to: '/admin/tecnicos',      icon: Wrench,          label: 'Técnicos'           },
+      { to: '/admin/reportes',      icon: BarChart2,       label: 'Reportes'           },
+      { to: '/admin/catalogos',     icon: BookOpen,        label: 'Catálogos'          },
+      { to: '/admin/usuarios',      icon: UserCog,         label: 'Usuarios'           },
+    ],
+  },
+  {
+    label: 'Tienda',
+    items: [
+      { to: '/admin/mi-tienda',  icon: Store, label: 'Mi Tienda'   },
+      { to: '/admin/ver-tienda', icon: Eye,   label: 'Ver Tienda'  },
+    ],
+  },
+  {
+    label: 'Sistema',
+    items: [
+      { to: '/admin/configuracion', icon: Settings,    label: 'Configuración' },
+      { to: '/admin/mi-perfil',     icon: UserCircle,  label: 'Mi Perfil'     },
+    ],
+  },
 ]
 
 export default function AdminLayout({ children }) {
@@ -51,24 +70,38 @@ export default function AdminLayout({ children }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 py-4 overflow-y-auto space-y-0.5 px-2">
-          {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/admin'}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium group ${
-                  isActive
-                    ? 'bg-orange-500 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                }`
-              }
-            >
-              <Icon size={18} className="flex-shrink-0" />
-              {sidebarOpen && <span className="truncate">{label}</span>}
-              {sidebarOpen && <ChevronRight size={14} className="ml-auto opacity-0 group-hover:opacity-50 transition-opacity" />}
-            </NavLink>
+        <nav className="flex-1 py-4 overflow-y-auto px-2 space-y-1">
+          {NAV_GROUPS.map((group, gi) => (
+            <div key={gi}>
+              {group.label && sidebarOpen && (
+                <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] px-3 pt-3 pb-1">
+                  {group.label}
+                </p>
+              )}
+              {group.label && !sidebarOpen && gi > 0 && (
+                <div className="border-t border-gray-800 my-2 mx-2" />
+              )}
+              <div className="space-y-0.5">
+                {group.items.map(({ to, icon: Icon, label }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={to === '/admin'}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium group ${
+                        isActive
+                          ? 'bg-orange-500 text-white'
+                          : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      }`
+                    }
+                  >
+                    <Icon size={18} className="flex-shrink-0" />
+                    {sidebarOpen && <span className="truncate">{label}</span>}
+                    {sidebarOpen && <ChevronRight size={14} className="ml-auto opacity-0 group-hover:opacity-50 transition-opacity" />}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 

@@ -2,6 +2,7 @@ import api from '../api/axiosInstance'
 
 export const crearAgendamiento = (datos) =>
   api.post('/api/agendamientos', datos)
+    .then(r => { api.invalidar('/api/agendamientos/mis'); return r })
 
 export const obtenerMisAgendamientos = () =>
   api.get('/api/agendamientos/mis')
@@ -16,6 +17,7 @@ export const obtenerDisponibilidad = (fecha, servicioId) =>
 
 export const cancelarAgendamiento = (id) =>
   api.delete(`/api/agendamientos/${id}`)
+    .then(r => { api.invalidar('/api/agendamientos/mis'); return r })
 
 export const confirmarAgendamiento = (id) =>
   api.patch(`/api/agendamientos/${id}/confirmar`)

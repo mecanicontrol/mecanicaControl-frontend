@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Navbar from "../../components/Navbar";
-import { ShoppingCart, Plus, Minus, Trash2, Package, Search, Tag } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Trash2, Package, Search, Tag, ChevronLeft, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosInstance";
 import imgAceite       from "../../assets/tienda/aceite.jpg";
 import imgFrenos       from "../../assets/tienda/frenos.jpg";
@@ -66,6 +67,7 @@ function SkeletonCard() {
 }
 
 export default function Tienda() {
+  const navigate = useNavigate();
   const [categoriaActiva, setCategoriaActiva] = useState("TODOS");
   const [busqueda, setBusqueda] = useState("");
   const [carrito, setCarrito]   = useState([]);
@@ -73,6 +75,8 @@ export default function Tienda() {
   const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando]     = useState(true);
   const [error, setError]           = useState(null);
+  const [pagina, setPagina]         = useState(1);
+  const POR_PAGINA = 6;
 
   const cargarDatos = useCallback(async () => {
     setCargando(true);
@@ -93,7 +97,7 @@ export default function Tienda() {
 
   useEffect(() => { cargarDatos(); }, [cargarDatos]);
 
-  const productosFiltrados = productos.filter((p) => {
+  const productosFiltrados = useMemo(() => productos.filter((p) => {
     const coincideCategoria =
       categoriaActiva === "TODOS" || p.categoria === categoriaActiva;
     const q = busqueda.toLowerCase();
@@ -103,7 +107,13 @@ export default function Tienda() {
       p.categoria.toLowerCase().includes(q) ||
       (p.marca && p.marca.toLowerCase().includes(q));
     return coincideCategoria && coincideBusqueda;
-  });
+  }), [productos, categoriaActiva, busqueda]);
+
+  const totalPaginas = Math.ceil(productosFiltrados.length / POR_PAGINA);
+  const productosPagina = productosFiltrados.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
+
+  // Reset a página 1 cuando cambia filtro o búsqueda
+  useEffect(() => { setPagina(1); }, [categoriaActiva, busqueda]);
 
   const agregarAlCarrito = (producto) => {
     setCarrito((prev) => {
@@ -231,8 +241,9 @@ export default function Tienda() {
               )}
 
               {!cargando && !error && productosFiltrados.length > 0 && (
+                <>
                 <div className="grid md:grid-cols-3 gap-8">
-                  {productosFiltrados.map((producto) => {
+                  {productosPagina.map((producto) => {
                     const itemCarrito = enCarrito(producto.id);
                     const sinStock = producto.stock <= 0;
                     return (
@@ -310,6 +321,52 @@ export default function Tienda() {
                     );
                   })}
                 </div>
+
+                {/* ── Paginación ── */}
+                {totalPaginas > 1 && (
+                  <div className="flex items-center justify-between mt-10">
+                    <p className="text-sm text-gray-500">
+                      Mostrando{" "}
+                      <span className="font-bold text-gray-700">
+                        {(pagina - 1) * POR_PAGINA + 1}–{Math.min(pagina * POR_PAGINA, productosFiltrados.length)}
+                      </span>{" "}
+                      de <span className="font-bold text-gray-700">{productosFiltrados.length}</span> productos
+                    </p>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => { setPagina((p) => p - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        disabled={pagina === 1}
+                        className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-orange-50 hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+
+                      {Array.from({ length: totalPaginas }, (_, i) => i + 1).map((n) => (
+                        <button
+                          key={n}
+                          onClick={() => { setPagina(n); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                          className={`w-9 h-9 rounded-lg text-sm font-bold transition border ${
+                            n === pagina
+                              ? "bg-orange-500 text-white border-orange-500"
+                              : "bg-white text-gray-600 border-gray-200 hover:bg-orange-50 hover:border-orange-300"
+                          }`}
+                        >
+                          {n}
+                        </button>
+                      ))}
+
+                      <button
+                        onClick={() => { setPagina((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        disabled={pagina === totalPaginas}
+                        className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-orange-50 hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+                </>
               )}
             </div>
 
@@ -389,6 +446,7 @@ export default function Tienda() {
                   </div>
                   <button
                     disabled={carrito.length === 0}
+                    onClick={() => navigate("/tienda/checkout", { state: { carrito } })}
                     className={`w-full py-3 rounded-lg font-bold transition ${
                       carrito.length === 0
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"

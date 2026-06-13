@@ -51,7 +51,14 @@ export default function PerfilUsuario() {
   // ── carga inicial
   useEffect(() => {
     getMiPerfil()
-      .then(({ data }) => setCuenta(data))
+      .then(({ data }) => {
+        setCuenta(data)
+        setPerfil({
+          telefono: data.telefono || '',
+          direccion: data.direccion || '',
+          rut: data.rut || '',
+        })
+      })
       .catch(() => {})
       .finally(() => setCargando(false))
   }, [])

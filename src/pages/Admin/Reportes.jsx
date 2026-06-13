@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react'
 import AdminLayout from '../../components/admin/AdminLayout'
 import { obtenerDashboard } from '../../services/adminService'
+import { obtenerReporteVentas } from '../../services/pedidoService'
 import {
   Chart as ChartJS,
   ArcElement, Tooltip, Legend,
   CategoryScale, LinearScale, BarElement, Title,
 } from 'chart.js'
 import { Doughnut, Bar } from 'react-chartjs-2'
-import { Calendar, Users, Wrench, Clock, TrendingUp, Loader2 } from 'lucide-react'
+import { Calendar, Users, Wrench, Clock, TrendingUp, Loader2, ShoppingBag, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react'
+
+function formatCLP(v) {
+  const n = typeof v === 'number' ? v : parseFloat(v ?? 0)
+  return n.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })
+}
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title)
 
@@ -58,16 +64,24 @@ const CHART_OPTS_BASE = {
 }
 
 export default function Reportes() {
-  const [data, setData]       = useState(null)
+  const [data,    setData]    = useState(null)
+  const [ventas,  setVentas]  = useState(null)
+  const [diasVentas, setDiasVentas] = useState(30)
   const [cargando, setCargando] = useState(true)
-  const [error, setError]     = useState(null)
+  const [error,   setError]   = useState(null)
+  const [pedidoAbierto, setPedidoAbierto] = useState(null)
 
   useEffect(() => {
-    obtenerDashboard()
-      .then(({ data: d }) => setData(d))
+    Promise.all([obtenerDashboard(), obtenerReporteVentas(diasVentas)])
+      .then(([{ data: d }, { data: v }]) => { setData(d); setVentas(v) })
       .catch(() => setError('No se pudo cargar la información'))
       .finally(() => setCargando(false))
   }, [])
+
+  const cargarVentas = (dias) => {
+    setDiasVentas(dias)
+    obtenerReporteVentas(dias).then(({ data: v }) => setVentas(v)).catch(() => {})
+  }
 
   if (cargando) {
     return (
@@ -296,6 +310,151 @@ export default function Reportes() {
             <p className="text-gray-600 text-sm text-center py-10">Sin agendamientos recientes</p>
           )}
         </div>
+
+        {/* ── SECCIÓN VENTAS ───────────────────────────────────────────────── */}
+        {ventas && (
+          <>
+            {/* Selector período + KPIs ventas */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-black text-white">Ventas y Servicios</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Ingresos del período seleccionado</p>
+                </div>
+                <div className="flex gap-2">
+                  {[7, 30, 90].map(d => (
+                    <button key={d} onClick={() => cargarVentas(d)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition ${
+                        diasVentas === d
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                      }`}>
+                      {d === 7 ? '7 días' : d === 30 ? '30 días' : '90 días'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Ventas tienda</p>
+                  <p className="text-2xl font-black text-orange-400 mt-1">{formatCLP(ventas.resumen.totalVentasTienda)}</p>
+                  <p className="text-xs text-gray-600 mt-0.5">{ventas.resumen.cantidadPedidos} pedido{ventas.resumen.cantidadPedidos !== 1 ? 's' : ''}</p>
+                </div>
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Servicios completados</p>
+                  <p className="text-2xl font-black text-green-400 mt-1">{formatCLP(ventas.resumen.totalServicios)}</p>
+                  <p className="text-xs text-gray-600 mt-0.5">{ventas.resumen.cantidadOTs} OT{ventas.resumen.cantidadOTs !== 1 ? 's' : ''}</p>
+                </div>
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 lg:col-span-2">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Total general</p>
+                  <p className="text-3xl font-black text-white mt-1">{formatCLP(ventas.resumen.totalGeneral)}</p>
+                  <p className="text-xs text-gray-600 mt-0.5">Tienda + Servicios · últimos {diasVentas} días</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Tabla pedidos tienda */}
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-800 flex items-center gap-2">
+                <ShoppingBag size={15} className="text-orange-400" />
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                  Pedidos tienda online ({ventas.pedidos.length})
+                </p>
+              </div>
+              {ventas.pedidos.length === 0 ? (
+                <p className="text-gray-600 text-sm text-center py-10">Sin pedidos en este período</p>
+              ) : (
+                <div className="divide-y divide-gray-800/50">
+                  {ventas.pedidos.map(p => (
+                    <div key={p.id}>
+                      <button
+                        onClick={() => setPedidoAbierto(pedidoAbierto === p.id ? null : p.id)}
+                        className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-800/40 transition text-left"
+                      >
+                        <div className="flex items-center gap-4 min-w-0">
+                          <span className="text-xs font-mono text-orange-400 flex-shrink-0">{p.numeroPedido}</span>
+                          <span className="text-sm font-bold text-white truncate">{p.clienteNombre}</span>
+                          <span className="text-xs text-gray-500 hidden sm:block">{p.clienteEmail}</span>
+                        </div>
+                        <div className="flex items-center gap-4 flex-shrink-0">
+                          <span className="text-xs text-gray-500">{new Date(p.fecha).toLocaleDateString('es-CL')}</span>
+                          <span className="text-sm font-black text-orange-400">{formatCLP(p.total)}</span>
+                          {pedidoAbierto === p.id ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
+                        </div>
+                      </button>
+                      {pedidoAbierto === p.id && (
+                        <div className="px-5 pb-4 bg-gray-800/30">
+                          <table className="w-full text-xs mt-2">
+                            <thead>
+                              <tr className="text-gray-500 uppercase tracking-wider">
+                                <th className="text-left pb-1.5">Producto</th>
+                                <th className="text-center pb-1.5">Cant.</th>
+                                <th className="text-right pb-1.5">Precio unit.</th>
+                                <th className="text-right pb-1.5">Subtotal</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-700/40">
+                              {p.items.map((it, i) => (
+                                <tr key={i}>
+                                  <td className="py-1.5 text-gray-300">{it.nombre}</td>
+                                  <td className="text-center text-gray-400">{it.cantidad}</td>
+                                  <td className="text-right text-gray-400">{formatCLP(it.precio)}</td>
+                                  <td className="text-right text-white font-bold">{formatCLP(it.subtotal)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                          <div className="flex justify-between mt-3 pt-2 border-t border-gray-700/40 text-xs">
+                            <span className="text-gray-500">Envío: {formatCLP(p.costoEnvio)}</span>
+                            <span className="font-black text-orange-400">Total: {formatCLP(p.total)}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Tabla OTs completadas */}
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-800 flex items-center gap-2">
+                <CheckCircle size={15} className="text-green-400" />
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                  Servicios completados ({ventas.servicios.length})
+                </p>
+              </div>
+              {ventas.servicios.length === 0 ? (
+                <p className="text-gray-600 text-sm text-center py-10">Sin servicios completados en este período</p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-800 text-gray-500 text-xs uppercase tracking-wider">
+                      {['OT', 'Vehículo', 'Patente', 'Fecha cierre', 'Mano obra', 'Repuestos', 'Total'].map(h => (
+                        <th key={h} className="px-4 py-3 text-left font-semibold">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800/50">
+                    {ventas.servicios.map(ot => (
+                      <tr key={ot.codigo} className="hover:bg-gray-800/40 transition-colors">
+                        <td className="px-4 py-3 font-mono text-xs text-orange-400">{ot.codigo}</td>
+                        <td className="px-4 py-3 text-gray-300 max-w-[140px] truncate">{ot.vehiculo}</td>
+                        <td className="px-4 py-3 text-gray-400 font-mono text-xs">{ot.patente}</td>
+                        <td className="px-4 py-3 text-gray-400 text-xs">{ot.fechaCierre ? new Date(ot.fechaCierre).toLocaleDateString('es-CL') : '—'}</td>
+                        <td className="px-4 py-3 text-gray-300">{formatCLP(ot.costoManoObra)}</td>
+                        <td className="px-4 py-3 text-gray-300">{formatCLP(ot.costoRepuestos)}</td>
+                        <td className="px-4 py-3 font-black text-green-400">{formatCLP(ot.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </>
+        )}
+
       </div>
     </AdminLayout>
   )

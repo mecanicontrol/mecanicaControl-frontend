@@ -1,21 +1,24 @@
 import { useEffect, useState } from "react";
 import SidebarTecnico from "../../components/Tecnico/SidebarTecnico";
 import TopbarTecnico from "../../components/Tecnico/TopbarTecnico";
-import { Eye, Search, Filter, ClipboardList } from "lucide-react";
+import { Eye, Search, Filter, ClipboardList, Car } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { obtenerMisOrdenesTecnico } from "../../services/tecnicoService";
+import api from "../../api/axiosInstance";
 
 export default function OrdenesTecnico() {
   const navigate = useNavigate();
   const [busqueda, setBusqueda] = useState("");
   const [ordenes, setOrdenes] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [taller, setTaller]     = useState(null);
 
   useEffect(() => {
     obtenerMisOrdenesTecnico()
       .then(({ data }) => setOrdenes(Array.isArray(data) ? data : []))
       .catch(() => setOrdenes([]))
       .finally(() => setCargando(false));
+    api.get('/api/taller/estado').then(({ data }) => setTaller(data)).catch(() => {});
   }, []);
 
   const ordenesFiltradas = ordenes.filter((ot) => {
@@ -23,14 +26,16 @@ export default function OrdenesTecnico() {
     return texto.includes(busqueda.toLowerCase());
   });
 
-  const estadoClass = (estado = "") => {
-    const e = estado.toUpperCase();
-    if (e === "COMPLETADA") return "bg-green-100 text-green-700";
-    if (e === "EN_PROCESO" || e === "EN PROCESO") return "bg-orange-100 text-orange-700";
-    return "bg-gray-100 text-gray-700";
+  const estadoConfig = (estado = "") => {
+    switch (estado.toUpperCase()) {
+      case "ACTIVA":         return { cls: "bg-blue-100 text-blue-700",   label: "Agendado" };
+      case "EN_PROCESO":     return { cls: "bg-orange-100 text-orange-700", label: "En Proceso" };
+      case "CONTROL_CALIDAD":return { cls: "bg-cyan-100 text-cyan-700",   label: "Control Calidad" };
+      case "LISTA_ENTREGA":  return { cls: "bg-green-100 text-green-700", label: "Listo Entrega" };
+      case "COMPLETADA":     return { cls: "bg-gray-100 text-gray-500",   label: "Completada" };
+      default:               return { cls: "bg-gray-100 text-gray-700",   label: estado.replace(/_/g, " ") };
+    }
   };
-
-  const estadoLabel = (estado = "") => estado.replace(/_/g, " ");
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -59,6 +64,26 @@ export default function OrdenesTecnico() {
               {ordenesFiltradas.length} órdenes
             </div>
           </div>
+
+          {taller && (
+            <section className={`rounded-xl px-5 py-3 mb-6 flex items-center gap-4 border ${taller.tallerLleno ? 'bg-red-50 border-red-200' : taller.disponibles <= 3 ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200'}`}>
+              <Car size={18} className={taller.tallerLleno ? 'text-red-500' : taller.disponibles <= 3 ? 'text-yellow-600' : 'text-green-600'} />
+              <div className="flex items-center gap-2 flex-1 flex-wrap">
+                <span className={`text-sm font-black ${taller.tallerLleno ? 'text-red-700' : taller.disponibles <= 3 ? 'text-yellow-700' : 'text-green-700'}`}>
+                  Taller: {taller.vehiculosEnTaller}/{taller.capacidadMaxima} vehículos
+                </span>
+                <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${taller.tallerLleno ? 'bg-red-500' : taller.disponibles <= 3 ? 'bg-yellow-500' : 'bg-green-500'}`}
+                    style={{ width: `${Math.min(100, Math.round((taller.vehiculosEnTaller / taller.capacidadMaxima) * 100))}%` }}
+                  />
+                </div>
+                <span className={`text-xs font-bold ${taller.tallerLleno ? 'text-red-500' : taller.disponibles <= 3 ? 'text-yellow-600' : 'text-green-600'}`}>
+                  {taller.tallerLleno ? '— Lleno' : `— ${taller.disponibles} cupo${taller.disponibles !== 1 ? 's' : ''} libre${taller.disponibles !== 1 ? 's' : ''}`}
+                </span>
+              </div>
+            </section>
+          )}
 
           <section className="bg-white rounded-2xl shadow p-6 mb-8">
             <div className="flex gap-4">
@@ -123,8 +148,8 @@ export default function OrdenesTecnico() {
                     </div>
 
                     <div className="col-span-2">
-                      <span className={`px-4 py-2 rounded-full text-xs font-black uppercase ${estadoClass(ot.estado)}`}>
-                        {estadoLabel(ot.estado)}
+                      <span className={`px-4 py-2 rounded-full text-xs font-black uppercase ${estadoConfig(ot.estado).cls}`}>
+                        {estadoConfig(ot.estado).label}
                       </span>
                     </div>
 

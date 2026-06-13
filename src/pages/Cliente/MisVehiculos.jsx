@@ -74,7 +74,7 @@ export default function MisVehiculos() {
     setError('')
 
     try {
-      await guardarVehiculo({
+      const { data: nuevo } = await guardarVehiculo({
         patente: form.patente.toUpperCase().trim(),
         marcaId: form.marcaId || null,
         modeloId: form.modeloId || null,
@@ -83,17 +83,9 @@ export default function MisVehiculos() {
         alias: form.alias || null
       })
 
-      setForm({
-        patente: '',
-        marcaId: '',
-        modeloId: '',
-        anio: '',
-        kilometraje: '',
-        alias: ''
-      })
-
+      setVehiculos(prev => [...prev, nuevo])
+      setForm({ patente: '', marcaId: '', modeloId: '', anio: '', kilometraje: '', alias: '' })
       setMostrarForm(false)
-      cargarVehiculos()
     } catch (e) {
       setError(
         e.response?.data?.message ??

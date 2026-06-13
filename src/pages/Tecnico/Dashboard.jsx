@@ -3,6 +3,7 @@ import TopbarTecnico from "../../components/Tecnico/TopbarTecnico";
 import { useEffect, useState } from "react";
 import { obtenerDashboardTecnico } from "../../services/tecnicoService";
 import { useNavigate } from "react-router-dom";
+import api from "../../api/axiosInstance";
 import {
   ClipboardList,
   Car,
@@ -52,6 +53,7 @@ export default function TecnicoDashboard() {
 
   const [ordenes, setOrdenes] = useState([]);
   const [mensaje, setMensaje] = useState("");
+  const [taller, setTaller]   = useState(null);
 
   const [dashboard, setDashboard] = useState({
     otActivas: 0,
@@ -63,6 +65,7 @@ export default function TecnicoDashboard() {
   useEffect(() => {
     cargarOrdenes();
     cargarDashboard();
+    api.get('/api/taller/estado').then(({ data }) => setTaller(data)).catch(() => {});
   }, []);
 
   const cargarOrdenes = () => {
@@ -195,7 +198,7 @@ export default function TecnicoDashboard() {
             </div>
           </section>
 
-          <section className="grid grid-cols-4 gap-6 mb-8">
+          <section className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <CardResumen
               icon={<ClipboardList className="text-orange-500 mb-4" size={30} />}
               borde="border-orange-500"
@@ -225,6 +228,45 @@ export default function TecnicoDashboard() {
               naranja
             />
           </section>
+
+          {/* Estado del taller */}
+          {taller && (
+            <section className={`bg-white rounded-2xl shadow p-6 mb-8 border-l-4 ${taller.tallerLleno ? 'border-red-500' : taller.disponibles <= 3 ? 'border-yellow-500' : 'border-green-500'}`}>
+              <div className="flex items-center justify-between gap-6 flex-wrap">
+                <div className="flex items-center gap-4">
+                  <Car size={28} className={taller.tallerLleno ? 'text-red-500' : 'text-green-500'} />
+                  <div>
+                    <p className="text-xs font-black uppercase text-gray-400 tracking-wider">Estado del taller</p>
+                    <p className="text-2xl font-black text-slate-900">
+                      {taller.vehiculosEnTaller} <span className="text-gray-400 text-base font-bold">/ {taller.capacidadMaxima} vehículos</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex-1 min-w-48">
+                  <div className="flex justify-between text-xs font-black mb-1">
+                    <span className="text-gray-500">Ocupación</span>
+                    <span className={taller.tallerLleno ? 'text-red-500' : 'text-slate-700'}>
+                      {Math.round((taller.vehiculosEnTaller / taller.capacidadMaxima) * 100)}%
+                    </span>
+                  </div>
+                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${taller.tallerLleno ? 'bg-red-500' : taller.disponibles <= 3 ? 'bg-yellow-500' : 'bg-green-500'}`}
+                      style={{ width: `${Math.min(100, Math.round((taller.vehiculosEnTaller / taller.capacidadMaxima) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+                <span className={`px-4 py-2 rounded-full text-xs font-black uppercase ${taller.tallerLleno ? 'bg-red-100 text-red-700' : taller.disponibles <= 3 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                  {taller.tallerLleno ? 'Taller lleno' : `${taller.disponibles} cupo${taller.disponibles !== 1 ? 's' : ''} libre${taller.disponibles !== 1 ? 's' : ''}`}
+                </span>
+              </div>
+              {taller.tallerLleno && taller.proximaDisponibilidad && (
+                <p className="text-xs text-gray-400 mt-3">
+                  Próxima apertura estimada: <span className="font-bold text-gray-600">{new Date(taller.proximaDisponibilidad + 'T00:00:00').toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                </p>
+              )}
+            </section>
+          )}
 
           <section className="grid grid-cols-12 gap-8">
             <div className="col-span-8 bg-white rounded-2xl shadow p-8">
