@@ -8,19 +8,17 @@ export const obtenerServicios = () =>
 export const obtenerCategorias = () =>
   api.get('/api/catalogos/categorias-servicio')
 
-// ─── Marcas de vehículo (read + create) ───
-export const obtenerMarcas = () =>
-  api.get('/api/marcas/listar')
+// ─── Marcas de vehículo (CRUD) ───
+export const obtenerMarcas    = ()           => api.get('/api/marcas/listar')
+export const crearMarca       = (datos)      => api.post('/api/marcas/save/marca', datos)
+export const actualizarMarca  = (id, datos)  => api.put(`/api/marcas/${id}`, datos)
+export const eliminarMarca    = (id)         => api.delete(`/api/marcas/${id}`)
 
-export const crearMarca = (datos) =>
-  api.post('/api/marcas/save/marca', datos)
-
-// ─── Modelos de vehículo (read + create) ───
-export const obtenerModelos = () =>
-  api.get('/api/modelos/listar')
-
-export const crearModelo = (datos) =>
-  api.post('/api/modelos/save/modelo', datos)
+// ─── Modelos de vehículo (CRUD) ───
+export const obtenerModelos   = ()           => api.get('/api/modelos/listar')
+export const crearModelo      = (datos)      => api.post('/api/modelos/save/modelo', datos)
+export const actualizarModelo = (id, datos)  => api.put(`/api/modelos/${id}`, datos)
+export const eliminarModelo   = (id)         => api.delete(`/api/modelos/${id}`)
 
 // ─── Niveles de fidelización (read-only) ───
 export const obtenerNiveles = () =>
