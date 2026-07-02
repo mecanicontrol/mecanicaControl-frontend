@@ -699,16 +699,22 @@ function PanelDiagnostico({ fv, faseNext, ot, codigo, onGuardado, onCompletada, 
         }));
         setServiciosProp(loaded);
       } else {
-        // Pre-cargar servicios originales del agendamiento
+        // Pre-cargar servicios originales del agendamiento, intentando hacer match por nombre en el catálogo
         const originales = ot.servicios || (ot.servicio ? [{ id: null, nombre: ot.servicio, precioBase: 0 }] : []);
-        setServiciosProp(originales.map(s => ({
-          servicioId:  s.id || null,
-          nombre:      s.nombre || ot.servicio,
-          precioBase:  s.precioBase || 0,
-          descripcion: "",
-          imagenes:    [],
-          subiendo:    false,
-        })));
+        setServiciosProp(originales.map(s => {
+          const nombre = s.nombre || ot.servicio || '';
+          const match  = cat.find(c =>
+            (c.nombreServicio || c.nombre || '').toLowerCase() === nombre.toLowerCase()
+          );
+          return {
+            servicioId:  s.id || match?.id || null,
+            nombre:      nombre,
+            precioBase:  s.precioBase || match?.precioBase || 0,
+            descripcion: "",
+            imagenes:    [],
+            subiendo:    false,
+          };
+        }));
       }
     }).finally(() => setCargandoCatalogo(false));
   }, [codigo]);
