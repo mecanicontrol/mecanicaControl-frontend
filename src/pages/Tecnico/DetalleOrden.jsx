@@ -468,8 +468,8 @@ function BotonesAccion({ meta, metaNext, esActiva, guardando, completando, confi
           <button onClick={onCancelarConfirm} className="flex-1 px-4 py-2.5 rounded-xl font-black text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 transition">
             Cancelar
           </button>
-          <button onClick={onConfirmar} className="flex-1 px-4 py-2.5 rounded-xl font-black text-sm bg-orange-500 hover:bg-orange-600 text-white transition flex items-center justify-center gap-2">
-            <CheckCircle size={15} /> Sí, completar fase
+          <button onClick={onConfirmar} disabled={completando} className="flex-1 px-4 py-2.5 rounded-xl font-black text-sm bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white transition flex items-center justify-center gap-2">
+            <CheckCircle size={15} /> {completando ? "Completando..." : "Sí, completar fase"}
           </button>
         </div>
       </div>
@@ -565,7 +565,10 @@ function PanelRecepcion({ fv, faseNext, ot, onGuardado, onCompletada, avisar, on
     try {
       await api.post(`/api/tecnicos/fases/${fv.id}/completar`, payload());
       onCompletada({ ...fv, ...payload(), estado: "COMPLETADA", finAt: new Date().toLocaleString("es-CL") });
-    } catch { avisar("Error al completar la fase", "error"); }
+    } catch (e) {
+      const msg = e.response?.data?.message ?? e.response?.data?.error ?? "Error al completar la fase";
+      avisar(msg, "error");
+    }
     finally { setCompletando(false); }
   };
 
@@ -791,7 +794,10 @@ function PanelDiagnostico({ fv, faseNext, ot, codigo, onGuardado, onCompletada, 
     try {
       await api.post(`/api/tecnicos/fases/${fv.id}/completar`, payload());
       onCompletada({ ...fv, ...payload(), estado: "COMPLETADA", finAt: new Date().toLocaleString("es-CL") });
-    } catch { avisar("Error al completar la fase", "error"); }
+    } catch (e) {
+      const msg = e.response?.data?.message ?? e.response?.data?.error ?? "Error al completar la fase";
+      avisar(msg, "error");
+    }
     finally { setCompletando(false); }
   };
 
@@ -1106,7 +1112,10 @@ function PanelEnTrabajo({ fv, faseNext, ot, onGuardado, onCompletada, avisar, on
     try {
       await api.post(`/api/tecnicos/fases/${fv.id}/completar`, payload());
       onCompletada({ ...fv, ...payload(), estado: "COMPLETADA", finAt: new Date().toLocaleString("es-CL") });
-    } catch { avisar("Error al completar la fase", "error"); }
+    } catch (e) {
+      const msg = e.response?.data?.message ?? e.response?.data?.error ?? "Error al completar la fase";
+      avisar(msg, "error");
+    }
     finally { setCompletando(false); }
   };
 
@@ -1594,7 +1603,10 @@ function PanelListoEntrega({ fv, fases, ot, onCompletada, avisar, onAbrirIA }) {
     try {
       await api.post(`/api/tecnicos/fases/${fv.id}/completar`, payload());
       onCompletada({ ...fv, ...payload(), estado: "COMPLETADA", finAt: new Date().toLocaleString("es-CL") });
-    } catch { avisar("Error al completar la fase", "error"); }
+    } catch (e) {
+      const msg = e.response?.data?.message ?? e.response?.data?.error ?? "Error al completar la fase";
+      avisar(msg, "error");
+    }
     finally { setCompletando(false); }
   };
 
