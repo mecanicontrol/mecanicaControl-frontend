@@ -15,6 +15,13 @@ import Historial             from './pages/Cliente/Historial'
 import AgendamientosCliente  from './pages/Cliente/Agendamientos'
 import PerfilCliente         from './pages/Cliente/Perfil'
 import DetalleVehiculo       from './pages/Cliente/DetalleVehiculo'
+import VerificarEmail      from './pages/Publico/VerificarEmail'
+import Checkout            from './pages/Publico/Checkout'
+import ConfirmacionCompra  from './pages/Publico/ConfirmacionCompra'
+import ConfirmarDiagnostico from './pages/Publico/ConfirmarDiagnostico'
+import SeguimientoDetalle  from './pages/Cliente/SeguimientoDetalle'
+import MiTienda            from './pages/Admin/MiTienda'
+import VerTienda           from './pages/Admin/VerTienda'
 import Perfil             from './pages/Publico/Perfil'
 import TecnicoPerfil      from './pages/Tecnico/Perfil'
 import TecnicoDashboard   from './pages/Tecnico/Dashboard'
@@ -33,6 +40,8 @@ import Catalogos          from './pages/Admin/Catalogos'
 import Usuarios           from './pages/Admin/Usuarios'
 import Configuracion      from './pages/Admin/Configuracion'
 import MiPerfil           from './pages/Admin/MiPerfil'
+import Propuestas         from './pages/Admin/Propuestas'
+import ControlCalidad     from './pages/Admin/ControlCalidad'
 
 function App() {
   return (
@@ -49,6 +58,10 @@ function App() {
           <Route path="/servicios"    element={<Servicios />}   />
           <Route path="/tienda"      element={<Tienda />}      />
           <Route path="/perfil"      element={<Perfil />}       />
+          <Route path="/verificar-email"           element={<VerificarEmail />} />
+          <Route path="/tienda/checkout"            element={<Checkout />} />
+          <Route path="/tienda/confirmacion"        element={<ConfirmacionCompra />} />
+          <Route path="/confirmar-diagnostico/:token" element={<ConfirmarDiagnostico />} />
           <Route path="/tecnico/perfil"    element={<RutaProtegida rolesPermitidos={['TECNICO']}><TecnicoPerfil /></RutaProtegida>} />
           <Route path="/tecnico/dashboard" element={<RutaProtegida rolesPermitidos={['TECNICO']}><TecnicoDashboard /></RutaProtegida>} />
           <Route path="/tecnico/ordenes"   element={<RutaProtegida rolesPermitidos={['TECNICO']}><OrdenesTecnico /></RutaProtegida>} />
@@ -101,6 +114,14 @@ function App() {
             element={
               <RutaProtegida rolesPermitidos={['CLIENTE', 'ADMIN']}>
                 <DetalleVehiculo />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/cliente/seguimiento/:id"
+            element={
+              <RutaProtegida rolesPermitidos={['CLIENTE', 'ADMIN']}>
+                <SeguimientoDetalle />
               </RutaProtegida>
             }
           />
@@ -200,6 +221,40 @@ function App() {
             element={
               <RutaProtegida rolesPermitidos={['ADMIN']}>
                 <MiPerfil />
+              </RutaProtegida>
+            }
+          />
+
+          <Route
+            path="/admin/propuestas"
+            element={
+              <RutaProtegida rolesPermitidos={['ADMIN']}>
+                <Propuestas />
+              </RutaProtegida>
+            }
+          />
+
+          <Route
+            path="/admin/control-calidad"
+            element={
+              <RutaProtegida rolesPermitidos={['ADMIN']}>
+                <ControlCalidad />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/admin/mi-tienda"
+            element={
+              <RutaProtegida rolesPermitidos={['ADMIN']}>
+                <MiTienda />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/admin/ver-tienda"
+            element={
+              <RutaProtegida rolesPermitidos={['ADMIN']}>
+                <VerTienda />
               </RutaProtegida>
             }
           />

@@ -4,21 +4,23 @@ import { useAuth } from '../../context/AuthContext'
 import {
   LayoutDashboard, CalendarDays, ClipboardList, Package,
   Users, Wrench, BarChart2, BookOpen, UserCog, Settings,
-  UserCircle, LogOut, Menu, X, ChevronRight,
+  UserCircle, LogOut, Menu, X, ChevronRight, FileText, ShieldCheck,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { to: '/admin',               icon: LayoutDashboard, label: 'Dashboard'          },
-  { to: '/admin/agendamientos', icon: CalendarDays,    label: 'Agendamientos'      },
-  { to: '/admin/ot',            icon: ClipboardList,   label: 'Órdenes de Trabajo' },
-  { to: '/admin/inventario',    icon: Package,         label: 'Inventario'         },
-  { to: '/admin/clientes',      icon: Users,           label: 'Clientes'           },
-  { to: '/admin/tecnicos',      icon: Wrench,          label: 'Técnicos'           },
-  { to: '/admin/reportes',      icon: BarChart2,       label: 'Reportes'           },
-  { to: '/admin/catalogos',     icon: BookOpen,        label: 'Catálogos'          },
-  { to: '/admin/usuarios',      icon: UserCog,         label: 'Usuarios'           },
-  { to: '/admin/configuracion', icon: Settings,        label: 'Configuración'      },
-  { to: '/admin/mi-perfil',     icon: UserCircle,      label: 'Mi Perfil'          },
+  { to: '/admin',                  icon: LayoutDashboard, label: 'Dashboard'          },
+  { to: '/admin/agendamientos',    icon: CalendarDays,    label: 'Agendamientos'      },
+  { to: '/admin/ot',               icon: ClipboardList,   label: 'Órdenes de Trabajo' },
+  { to: '/admin/propuestas',       icon: FileText,        label: 'Propuestas'         },
+  { to: '/admin/control-calidad',  icon: ShieldCheck,     label: 'Control Calidad'    },
+  { to: '/admin/inventario',       icon: Package,         label: 'Inventario'         },
+  { to: '/admin/clientes',         icon: Users,           label: 'Clientes'           },
+  { to: '/admin/tecnicos',         icon: Wrench,          label: 'Técnicos'           },
+  { to: '/admin/reportes',         icon: BarChart2,       label: 'Reportes'           },
+  { to: '/admin/catalogos',        icon: BookOpen,        label: 'Catálogos'          },
+  { to: '/admin/usuarios',         icon: UserCog,         label: 'Usuarios'           },
+  { to: '/admin/configuracion',    icon: Settings,        label: 'Configuración'      },
+  { to: '/admin/mi-perfil',        icon: UserCircle,      label: 'Mi Perfil'          },
 ]
 
 export default function AdminLayout({ children }) {
