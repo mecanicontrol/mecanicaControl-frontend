@@ -34,7 +34,7 @@ export default function Login() {
       if (data.rol === 'ADMIN') {
         navigate('/admin')
       } else if (data.rol === 'TECNICO') {
-        navigate('/tecnico/perfil')
+        navigate('/tecnico/dashboard')
       } else {
         navigate('/')
       }

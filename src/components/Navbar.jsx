@@ -143,7 +143,7 @@ export default function Navbar() {
                     </div>
                   </div>
                   {[
-                    { icon: LayoutDashboard, label: 'Dashboard',     path: usuario?.rol === 'ADMIN' ? '/admin' : usuario?.rol === 'TECNICO' ? '/tecnico/perfil' : '/cliente/dashboard' },
+                    { icon: LayoutDashboard, label: 'Dashboard',     path: usuario?.rol === 'ADMIN' ? '/admin' : usuario?.rol === 'TECNICO' ? '/tecnico/dashboard' : '/cliente/dashboard' },
                     { icon: User,            label: 'Mi Perfil',     path: usuario?.rol === 'ADMIN' ? '/admin/mi-perfil' : usuario?.rol === 'TECNICO' ? '/tecnico/perfil' : '/cliente/perfil' },
                     ...(usuario?.rol === 'TECNICO' ? [] : [
                       { icon: Car,      label: 'Mis Vehículos',  path: '/mis-vehiculos' },
@@ -205,7 +205,7 @@ export default function Navbar() {
                     <p className="text-xs text-gray-400">{usuario.rol}</p>
                   </div>
                 </div>
-                <button onClick={() => navigate(usuario?.rol === 'ADMIN' ? '/admin' : usuario?.rol === 'TECNICO' ? '/tecnico/perfil' : '/cliente/dashboard')}
+                <button onClick={() => navigate(usuario?.rol === 'ADMIN' ? '/admin' : usuario?.rol === 'TECNICO' ? '/tecnico/dashboard' : '/cliente/dashboard')}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white">
                   <LayoutDashboard size={17} /> Dashboard
                 </button>

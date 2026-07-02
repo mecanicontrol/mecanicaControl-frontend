@@ -17,6 +17,10 @@ import PerfilCliente         from './pages/Cliente/Perfil'
 import DetalleVehiculo       from './pages/Cliente/DetalleVehiculo'
 import Perfil             from './pages/Publico/Perfil'
 import TecnicoPerfil      from './pages/Tecnico/Perfil'
+import TecnicoDashboard   from './pages/Tecnico/Dashboard'
+import OrdenesTecnico     from './pages/Tecnico/Ordenes'
+import DetalleOrden       from './pages/Tecnico/DetalleOrden'
+import InventarioTecnico  from './pages/Tecnico/Inventario'
 
 import Dashboard          from './pages/Admin/Dashboard'
 import Agendamientos      from './pages/Admin/Agendamientos'
@@ -45,7 +49,11 @@ function App() {
           <Route path="/servicios"    element={<Servicios />}   />
           <Route path="/tienda"      element={<Tienda />}      />
           <Route path="/perfil"      element={<Perfil />}       />
-          <Route path="/tecnico/perfil" element={<TecnicoPerfil />} />
+          <Route path="/tecnico/perfil"    element={<RutaProtegida rolesPermitidos={['TECNICO']}><TecnicoPerfil /></RutaProtegida>} />
+          <Route path="/tecnico/dashboard" element={<RutaProtegida rolesPermitidos={['TECNICO']}><TecnicoDashboard /></RutaProtegida>} />
+          <Route path="/tecnico/ordenes"   element={<RutaProtegida rolesPermitidos={['TECNICO']}><OrdenesTecnico /></RutaProtegida>} />
+          <Route path="/tecnico/ordenes/:codigo" element={<RutaProtegida rolesPermitidos={['TECNICO']}><DetalleOrden /></RutaProtegida>} />
+          <Route path="/tecnico/inventario" element={<RutaProtegida rolesPermitidos={['TECNICO']}><InventarioTecnico /></RutaProtegida>} />
 
           {/* Cliente */}
           <Route
