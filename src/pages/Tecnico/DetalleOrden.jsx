@@ -553,10 +553,10 @@ function PanelRecepcion({ fv, faseNext, ot, onGuardado, onCompletada, avisar, on
   };
 
   const solicitarCompletar = () => {
-    let ok = true;
-    if (!observaciones.trim()) { setErrDesc(true); textareaRef.current?.focus(); ok = false; }
-    if (imagenes.length === 0) { setErrFoto(true); ok = false; }
-    if (!ok) { avisar("Completa la descripción y sube al menos una foto", "error"); return; }
+    if (!observaciones.trim()) {
+      setErrDesc(true); textareaRef.current?.focus();
+      avisar("Describe el estado del vehículo antes de continuar", "error"); return;
+    }
     setConfirmando(true);
   };
 
