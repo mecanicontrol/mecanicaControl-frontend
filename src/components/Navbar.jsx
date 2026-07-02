@@ -143,11 +143,13 @@ export default function Navbar() {
                     </div>
                   </div>
                   {[
-                    { icon: LayoutDashboard, label: 'Dashboard',      path: usuario?.rol === 'ADMIN' ? '/admin' : '/cliente/dashboard' },
-                    { icon: User,            label: 'Mi Perfil',      path: usuario?.rol === 'ADMIN' ? '/admin/mi-perfil' : '/cliente/perfil' },
-                    { icon: Car,             label: 'Mis Vehículos',  path: '/mis-vehiculos' },
-                    { icon: Calendar,        label: 'Agendamientos',  path: '/cliente/agendamientos' },
-                    { icon: History,         label: 'Historial',      path: '/cliente/historial' },
+                    { icon: LayoutDashboard, label: 'Dashboard',     path: usuario?.rol === 'ADMIN' ? '/admin' : usuario?.rol === 'TECNICO' ? '/tecnico/perfil' : '/cliente/dashboard' },
+                    { icon: User,            label: 'Mi Perfil',     path: usuario?.rol === 'ADMIN' ? '/admin/mi-perfil' : usuario?.rol === 'TECNICO' ? '/tecnico/perfil' : '/cliente/perfil' },
+                    ...(usuario?.rol === 'TECNICO' ? [] : [
+                      { icon: Car,      label: 'Mis Vehículos',  path: '/mis-vehiculos' },
+                      { icon: Calendar, label: 'Agendamientos',  path: '/cliente/agendamientos' },
+                      { icon: History,  label: 'Historial',      path: '/cliente/historial' },
+                    ]),
                   ].map(({ icon: Icon, label, path }) => (
                     <button key={path} onClick={() => { navigate(path); setPerfilOpen(false) }}
                       className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-gray-700 text-left text-sm">
@@ -203,11 +205,11 @@ export default function Navbar() {
                     <p className="text-xs text-gray-400">{usuario.rol}</p>
                   </div>
                 </div>
-                <button onClick={() => navigate(usuario?.rol === 'ADMIN' ? '/admin' : '/cliente/dashboard')}
+                <button onClick={() => navigate(usuario?.rol === 'ADMIN' ? '/admin' : usuario?.rol === 'TECNICO' ? '/tecnico/perfil' : '/cliente/dashboard')}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white">
                   <LayoutDashboard size={17} /> Dashboard
                 </button>
-                <button onClick={() => navigate(usuario?.rol === 'ADMIN' ? '/admin/mi-perfil' : '/cliente/perfil')}
+                <button onClick={() => navigate(usuario?.rol === 'ADMIN' ? '/admin/mi-perfil' : usuario?.rol === 'TECNICO' ? '/tecnico/perfil' : '/cliente/perfil')}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white">
                   <User size={17} /> Mi Perfil
                 </button>
